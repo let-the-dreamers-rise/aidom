@@ -65,6 +65,17 @@ def score_target(t: dict) -> float:
     )
 
 
+def excluded_reason(t: dict):
+    """Hard rule: the human puts no money in. Returns why a target is out, or None."""
+    if t.get("submission_fee"):
+        return "submission fee"
+    if (t.get("capital_required_usd") or 0) > 0:
+        return f"requires ${t['capital_required_usd']:,} stake/deposit"
+    if t.get("fee_checked") is None:
+        return "fee status unchecked (treated as fee-charging until confirmed)"
+    return None
+
+
 def load(path: Path) -> list:
     data = json.loads(path.read_text())
     return data.get("targets", [])
@@ -82,12 +93,18 @@ def main() -> int:
         return 1
 
     targets = load(path)
-    ranked = sorted(targets, key=score_target, reverse=True)
+    eligible = [t for t in targets if excluded_reason(t) is None]
+    excluded = [(t, excluded_reason(t)) for t in targets if excluded_reason(t) is not None]
+    ranked = sorted(eligible, key=score_target, reverse=True)
 
     if args.json:
-        print(json.dumps([{**t, "score": score_target(t)} for t in ranked], indent=2))
+        print(json.dumps({
+            "eligible": [{**t, "score": score_target(t)} for t in ranked],
+            "excluded": [{**t, "excluded_reason": r} for t, r in excluded],
+        }, indent=2))
         return 0
 
+    print("ELIGIBLE (no fee, no stake, fee status confirmed on the live page)")
     print(f"{'#':>2}  {'score':>5}  {'kind':<14} {'cap $':>10}  {'fresh':>5}  {'comp':<6} name")
     print("-" * 92)
     for i, t in enumerate(ranked, 1):
@@ -98,8 +115,13 @@ def main() -> int:
             f"{t.get('max_payout_usd',0):>10,}  {fresh:>5}  "
             f"{t.get('competition',''):<6} {t.get('name','')}"
         )
+    if excluded:
+        print()
+        print("EXCLUDED — the human puts no money in")
+        for t, reason in excluded:
+            print(f"    - {t.get('name','')}: {reason}")
     print()
-    print("Score rewards fresh code + low competition + zero capital over headline pool size.")
+    print("Score rewards fresh code + low competition over headline pool size.")
     print("Re-verify every figure on the live scope page before starting a target.")
     return 0
 

@@ -24,9 +24,29 @@ uploads and signs.
 4. **HackerOne and Bugcrowd.** HackerOne takes about two business days to
    approve a W-8BEN. Bugcrowd requires Jumio identity verification before any
    payout.
-5. **Sherlock and CodeHawks.** Sherlock's standing bounty product needs a $250
-   USDC stake per report, refunded if the report is valid — the only non-zero
-   capital requirement in the whole plan.
+5. **CodeHawks and Sherlock contests.** Sherlock's *standing bounty* product
+   needs a $250 USDC stake per report and is therefore excluded (see below).
+   Sherlock's time-boxed contests do not require a stake and remain in scope.
+
+## Zero capital means zero — hard rule
+
+The human puts no money in. Not a fee, not a stake, not a deposit, not a
+mediation charge. This excludes, permanently and without exception:
+
+- Any program with a **submission fee**. Immunefi now runs "pay-to-submit"
+  programs where a non-refundable fee is charged per report (Lombard Finance
+  is one; several audit competitions, including ENS's, charge one). These are
+  out, whatever the pool size.
+- Any product requiring a **stake or deposit** per report, refundable or not
+  (Sherlock's standing bounty product, $250 USDC).
+- Any **mediation or dispute** process that costs money. If a report is closed
+  and appealing costs a fee, the appeal is not filed.
+- Any hackathon, contest or grant with an **entry fee**.
+
+Before a target is started, the machine confirms from the live program page
+that no fee, stake or deposit is mentioned anywhere, and records that check in
+`targets/targets.json`. A program whose fee status cannot be confirmed is
+treated as fee-charging until proven otherwise.
 
 ## Scope discipline (legal, not just courtesy)
 

@@ -1,5 +1,5 @@
 {
-  "_comment": "Real programs from the Sept 2026 research. Re-verify every figure on the platform before acting; scopes and pools change weekly. max_payout_usd is the program/pool maximum, not the expected payout. days_since_scope_change and competition are estimates the operator updates from the live scope page. Feed this file to rank.py.",
+  "_comment": "Real programs from the Sept 2026 research, re-checked against live pages on 2026-09-12. Re-verify every figure on the platform before acting; scopes and pools change weekly. max_payout_usd is the program/pool maximum, not the expected payout. days_since_scope_change and competition are operator estimates refreshed from the live scope page. HARD RULE: any target with a submission fee, stake or deposit is excluded — the human puts no money in. rank.py enforces this.",
   "_schema": {
     "name": "program or contest name",
     "platform": "hosting platform",
@@ -8,15 +8,49 @@
     "domain": "web3 | web | ai_product",
     "max_payout_usd": "program/pool maximum in USD",
     "kyc": "when KYC is required",
-    "capital_required_usd": "any upfront stake",
+    "capital_required_usd": "any upfront stake or deposit; > 0 excludes the target",
+    "submission_fee": "true if the program charges a per-report fee; excludes the target",
+    "fee_checked": "ISO date the live page was checked for fees, or null if unchecked (treated as fee-charging)",
     "days_since_scope_change": "days since the in-scope code last changed (lower = fresher = fewer eyes)",
-    "competition": "low | medium | high — how picked-over the surface is",
+    "competition": "low | medium | high",
     "deadline": "ISO date if time-boxed, else null",
     "notes": "operator notes"
   },
   "targets": [
     {
-      "name": "Immunefi standing bounties (mid-cap programs)",
+      "name": "ENS standing bug bounty (mainnet contracts)",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/ens/scope/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 250000,
+      "kyc": "generally not required; may be requested where law requires",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-12",
+      "days_since_scope_change": 1,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "ACTIVE TARGET. Scope = latest finalized mainnet release per ensdomains/ens-contracts wiki deployments page, plus ens-app-v3, ens-metadata-service, ensdomains-landing. Critical up to $250k (min $10k), High $25k-$100k, Medium $10k, Low $2.5k. PoC always required. Known issues: three NameWrapper/DAO items from 2023. The separate ENS audit COMPETITION (Manager/Explorer web apps, ends 2026-09-14) charges a submission fee and is EXCLUDED; stay in the standing bounty's contract scope. Repo last commit 2026-09-11."
+    },
+    {
+      "name": "The Graph bug bounty",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/thegraph/information/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 50000,
+      "kyc": "required for payout",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-12",
+      "days_since_scope_change": 16,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "Backup target. 36 assets in scope: contracts on Arbitrum and Ethereum plus indexer software. Critical $15k-$50k (10% of funds affected). Reproducible script PoC is a strict requirement. Local-fork testing only. Updated 2026-08-27."
+    },
+    {
+      "name": "Immunefi standing bounties (other mid-cap programs)",
       "platform": "Immunefi",
       "url": "https://immunefi.com/bug-bounty/",
       "kind": "standing_bounty",
@@ -24,10 +58,12 @@
       "max_payout_usd": 500000,
       "kyc": "at payout only; 70% paid if declined",
       "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
       "days_since_scope_change": 30,
       "competition": "medium",
       "deadline": null,
-      "notes": "Target $50k-$500k-cap programs with code changed in the last 60 days, not the $5M+ tier where everyone looks. New accounts capped at 1 submission per 24h until first paid report."
+      "notes": "Pool of candidates, each must be fee-checked individually before starting: SSV Network ($250k, but last updated 2026-04-09, not fresh), StackingDAO ($100k, 2026-09-02, Clarity language), 1inch smart contracts (launched 2026-06-11). New accounts capped at 1 submission per 24h until first paid report."
     },
     {
       "name": "Cantina standing bounties",
@@ -38,52 +74,12 @@
       "max_payout_usd": 2500000,
       "kyc": "Persona ID + verified ETH wallet",
       "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
       "days_since_scope_change": 30,
       "competition": "medium",
       "deadline": null,
-      "notes": "Largest live pool found ($34M+ aggregate). USDC via multisig payout."
-    },
-    {
-      "name": "Immunefi audit competitions",
-      "platform": "Immunefi",
-      "url": "https://immunefi.com/audit-competition/",
-      "kind": "audit_contest",
-      "domain": "web3",
-      "max_payout_usd": 70000,
-      "kyc": "at payout",
-      "capital_required_usd": 0,
-      "days_since_scope_change": 5,
-      "competition": "high",
-      "deadline": null,
-      "notes": "The product absorbing Code4rena's business. Enter in the first hours — duplicates split the pool. ENS pool $70k was live at research time; refresh the live list."
-    },
-    {
-      "name": "Sherlock contests",
-      "platform": "Sherlock",
-      "url": "https://sherlock.xyz/",
-      "kind": "audit_contest",
-      "domain": "web3",
-      "max_payout_usd": 550000,
-      "kyc": "Sumsub when required",
-      "capital_required_usd": 250,
-      "days_since_scope_change": 7,
-      "competition": "high",
-      "deadline": null,
-      "notes": "No published AI ban. Standing bounty product needs a $250 USDC stake per report, refunded if valid."
-    },
-    {
-      "name": "CodeHawks First Flights",
-      "platform": "Cyfrin CodeHawks",
-      "url": "https://codehawks.cyfrin.io/",
-      "kind": "audit_contest",
-      "domain": "web3",
-      "max_payout_usd": 20000,
-      "kyc": "per-contest at payout",
-      "capital_required_usd": 0,
-      "days_since_scope_change": 5,
-      "competition": "medium",
-      "deadline": null,
-      "notes": "Lowest-stakes calibration run. Use First Flights to prove the pipeline before risking reputation on a big contest."
+      "notes": "Largest live pool found ($34M+ aggregate). Fee status not yet confirmed on a per-program page; check before starting."
     },
     {
       "name": "HackenProof contests",
@@ -94,10 +90,28 @@
       "max_payout_usd": 300000,
       "kyc": "at payout",
       "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
       "days_since_scope_change": 10,
       "competition": "medium",
       "deadline": null,
-      "notes": "Several contests a month, $85k-$300k pools. AI policy not published — assume industry norm (verified OK, slop banned)."
+      "notes": "Several contests a month, $85k-$300k pools. Fee status unconfirmed; check per contest."
+    },
+    {
+      "name": "CodeHawks First Flights",
+      "platform": "Cyfrin CodeHawks",
+      "url": "https://codehawks.cyfrin.io/",
+      "kind": "audit_contest",
+      "domain": "web3",
+      "max_payout_usd": 20000,
+      "kyc": "per-contest at payout",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
+      "days_since_scope_change": 5,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "Lowest-stakes calibration run. Fee status unconfirmed; check per contest."
     },
     {
       "name": "Anthropic bug bounty (general track)",
@@ -108,10 +122,12 @@
       "max_payout_usd": 15000,
       "kyc": "tax form",
       "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
       "days_since_scope_change": 20,
       "competition": "low",
       "deadline": null,
-      "notes": "General track public only since May 2026, still under-hunted. Classic web bugs in the product are paid; jailbreaks/prompt injection are NOT. Safety track needs an NDA and is separate."
+      "notes": "General track public since May 2026. Classic web bugs in the product are paid; jailbreaks/prompt injection are NOT. Web targets need live-system testing under the researcher's own account, so this runs only after the human has an account and has read the rules of engagement."
     },
     {
       "name": "Google VRP / AI VRP",
@@ -122,10 +138,60 @@
       "max_payout_usd": 20000,
       "kyc": "tax form",
       "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
       "days_since_scope_change": 20,
       "competition": "medium",
       "deadline": null,
-      "notes": "AI VRP track launched Oct 2025, comparatively fresh. Jailbreaks/prompt injection/system-prompt extraction explicitly unpaid; classic bugs in AI products are paid."
+      "notes": "AI VRP track launched Oct 2025. Jailbreaks/prompt injection/system-prompt extraction explicitly unpaid."
+    },
+    {
+      "name": "Lombard Finance bug bounty",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/lombard-finance/information/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 250000,
+      "kyc": "required for payout",
+      "capital_required_usd": 0,
+      "submission_fee": true,
+      "fee_checked": "2026-09-12",
+      "days_since_scope_change": 1,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "EXCLUDED: charges a non-refundable submission fee on every report, all severities, collected by Immunefi. Freshest program on the list (updated 2026-09-11) but the human puts no money in."
+    },
+    {
+      "name": "Sherlock standing bounty product",
+      "platform": "Sherlock",
+      "url": "https://sherlock.xyz/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 550000,
+      "kyc": "Sumsub when required",
+      "capital_required_usd": 250,
+      "submission_fee": false,
+      "fee_checked": "2026-09-12",
+      "days_since_scope_change": 7,
+      "competition": "high",
+      "deadline": null,
+      "notes": "EXCLUDED: requires a $250 USDC stake per report. Sherlock's time-boxed contests have no stake and may be added separately once fee-checked."
+    },
+    {
+      "name": "Immunefi audit competitions (e.g. ENS Manager/Explorer, ends 2026-09-14)",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/audit-competition/",
+      "kind": "audit_contest",
+      "domain": "web3",
+      "max_payout_usd": 70000,
+      "kyc": "at payout",
+      "capital_required_usd": 0,
+      "submission_fee": true,
+      "fee_checked": "2026-09-12",
+      "days_since_scope_change": 5,
+      "competition": "high",
+      "deadline": "2026-09-14",
+      "notes": "EXCLUDED while fee-charging: the ENS competition page states a per-report submission fee set by Immunefi and shown at submission time. Check each competition individually; only fee-free ones are eligible."
     }
   ]
 }
