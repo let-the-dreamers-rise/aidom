@@ -6,9 +6,17 @@ blindly. Only a row that reaches `submitted` involved a human pressing send.
 
 | Date | Target | Scope ref | Candidates | Survived gate | Status | Payout |
 |---|---|---|---|---|---|---|
-| _ | _ | _ | _ | _ | _ | _ |
+| 2026-09-12 | ENS standing bounty | ens-contracts @ 121dc23 | 0 confirmed; 1 area open (CCIP batch error handling) | 0 | nothing_found (first pass) | — |
 
 Status values: `auditing` · `nothing_found` · `drafting` · `awaiting_human_signoff` · `submitted` · `accepted` · `paid` · `rejected` · `duplicate`
 
 No row moves to `submitted` until it has cleared every gate in
 `../playbook/self-refutation.md` and a human has read the proof of concept.
+
+## 2026-09-12 — ENS first pass
+
+Read the money path and the freshly-changed resolution machinery on the live
+mainnet scope (repo head 121dc23, 2026-09-11). No hypothesis cleared Gate 2 of
+the self-refutation gate, so nothing is being drafted. This is an honest
+"nothing found yet", not a finished audit — see `audit-notes-ens.md` for what
+was covered, what was not, and the one lead worth continuing.
