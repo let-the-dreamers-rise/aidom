@@ -1,0 +1,15 @@
+# Local audit working copies — cloned target source is never committed here
+work/
+targets/src/
+*.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
