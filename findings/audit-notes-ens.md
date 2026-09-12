@@ -31,7 +31,37 @@ repeated and so a continuation starts from the right place.
 - **RegistrarSecurityController / RootSecurityController.** Break-glass, all
   `onlyOwner` / `onlyController`; no unguarded path.
 
-## The one lead worth continuing
+## The CCIP lead — chased and refuted (2026-09-12)
+
+Verdict: not a vulnerability. The freshly-changed batch-error handling is
+correct, and the two recent commits tightened it rather than loosening it.
+Chased analytically to a firm "no"; the one arithmetic claim was verified
+exhaustively in Python (padding brings every non-empty error to
+`length % 32 == 4`, disjoint from valid ABI values at `% 32 == 0` — 0 collisions
+across all lengths). A full EVM proof of concept was not built: Foundry install
+is blocked by the session's egress policy (403 on the GitHub attestation host),
+and, more importantly, a PoC would only confirm a negative the code review had
+already settled.
+
+Why there is no bug:
+
+- **Single (non-multicall) resolution:** a batch-gateway error sets
+  `FLAG_BATCH_ERROR`, and `resolveBatchCallback` reverts with the (wrapped)
+  error bytes. An error can never be returned as a valid answer.
+- **Multicall resolution:** each error element is returned raw but padded to
+  `length % 32 == 4`, the spec's error marker; valid ABI-encoded values are
+  always `% 32 == 0`. A client following the spec cannot mistake one for the
+  other. The padding math `(4 - len) & 31` is correct for every length.
+- **Non-failure gateway responses** are not trusted directly — they are passed
+  back through the resolver's *own* CCIP callback (`p.callbackFunction` on
+  `p.sender`), which is where a real offchain resolver verifies its data.
+  Whether a given resolver verifies is that resolver's design, not ENS core.
+- The empty-error case (`v.length == 0`, not padded) surfaces as an empty
+  element, i.e. "no record", not attacker-chosen data.
+
+The lead is closed. Original notes retained below for the record.
+
+### Original lead notes
 
 The freshest code in the repo is the CCIP-Read batch error handling, changed in
 the two commits immediately before head (#574 on 2026-09-10, #575 on

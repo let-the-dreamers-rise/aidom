@@ -6,7 +6,7 @@ blindly. Only a row that reaches `submitted` involved a human pressing send.
 
 | Date | Target | Scope ref | Candidates | Survived gate | Status | Payout |
 |---|---|---|---|---|---|---|
-| 2026-09-12 | ENS standing bounty | ens-contracts @ 121dc23 | 0 confirmed; 1 area open (CCIP batch error handling) | 0 | nothing_found (first pass) | — |
+| 2026-09-12 | ENS standing bounty | ens-contracts @ 121dc23 | 1 (CCIP batch error handling) | 0 (refuted) | nothing_found | — |
 
 Status values: `auditing` · `nothing_found` · `drafting` · `awaiting_human_signoff` · `submitted` · `accepted` · `paid` · `rejected` · `duplicate`
 
