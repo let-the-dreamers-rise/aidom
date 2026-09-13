@@ -79,7 +79,7 @@
       "days_since_scope_change": 50,
       "competition": "low",
       "deadline": null,
-      "notes": "ACTIVE TARGET (third). Bitcoin lending on Stacks, CLARITY language (small researcher pool = edge). Live since 2025-02-26, updated 2026-07-25, 31 assets pinned by on-chain address. Critical $25k-$100k, High $5k-$25k, Medium $2.5k, Low $1k. PoC required. Known issues: soft-liquidation risk, governance input validation, deployment param validation, references to non-existent methods. Sources fetched from Hiro API into work/granite/. See findings/audit-notes-granite.md."
+      "notes": "ACTIVE TARGET (third). Bitcoin lending on Stacks, CLARITY language (small researcher pool = edge). Live since 2025-02-26, updated 2026-07-25, 31 assets pinned by on-chain address. Critical $25k-$100k, High $5k-$25k, Medium $2.5k, Low $1k. PoC required. Known issues: soft-liquidation risk, governance input validation, deployment param validation, references to non-existent methods. Sources fetched from Hiro API into work/granite/. 2026-09-13: BOTH markets migrated in Aug 2026 to new contract sets (USDCx ~$5M -> SPSX722NK9V3A8D3CVQT0CDY4EBQ3E9FSDDE61FT.*, aeUSDC ~$97k -> SP119QJ4NVE3RQP8RXJVW5EXAV3XD4CJZWRCEEAAR.*); the scope page (updated 25 Jul 2026) still lists the de-allowlisted predecessors. Auditing the live sets; any report must flag the stale scope. See findings/audit-notes-granite.md."
     },
     {
       "name": "HackenProof contests",

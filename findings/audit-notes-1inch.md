@@ -64,3 +64,46 @@ harness built against the npm dependency set.
 
 No hypothesis cleared Gate 2 of the self-refutation gate on the code read so
 far. Nothing drafted. The next pass should read the LOP OrderMixin core.
+
+## 2026-09-13 addendum — limit-order-protocol core read
+
+Read the LOP @ 4.3.2 core that the escrow factory builds on: OrderMixin
+(fill/cancel/invalidator flow), OrderLib (EIP-712 hashing, amount getters,
+`isValidExtension`), ExtensionLib and OffsetsLib (the offset-packed extension
+parser). This is the highest-value surface in the 1inch scope and it is also
+the most audited. Findings: none that clear the gate.
+
+Notes for the record (all standard, accepted 1inch design, not bugs):
+- Signature is verified only on the first fill (`remaining == makingAmount`);
+  later partial fills are gated by the remaining-invalidator. Maker-permit
+  first-fill path has an explicit reentrancy check on the remaining slot.
+- The order invalidator is written BEFORE the maker->taker / taker->maker
+  transfers and interaction hooks, which is the correct ordering for
+  reentrancy safety.
+- `isValidExtension` binds only the low 160 bits of keccak(extension) to the
+  low 160 bits of the salt; a second extension colliding there is a 160-bit
+  search, infeasible, and a malicious maker only signs against their own order.
+- `OffsetsLib.get` checks `end <= concat.length` but not `begin <= end`; a
+  malformed offset table underflows `length`. The offset table is part of the
+  maker-signed extension, so a maker can only craft it against their own order
+  (extension is hash-bound to the salt); it is not a taker-fund vector. Noted
+  as understood, not a finding.
+- `unchecked { makingAmount * takingAmount == 0 }` can only wrap to zero for
+  factors with huge 2-adic valuation, which fails safe (reverts), never opens
+  a zero-amount swap.
+
+Conclusion: 1inch is exhausted for this operation's purposes at a read level.
+Marqueree, heavily-audited protocols (ENS, 1inch) are the wrong pool. Pivoting
+to newer, smaller, less-competed programs.
+
+## Solana `rescue_funds_for_order` (src escrow) — CLEARED, out of scope (2026-09-13)
+
+Observed: any whitelisted resolver can call `rescue_funds_for_order` for any
+`mint` once `rescue_start` (order creation + RESCUE_DELAY 8 days) has passed;
+there is no expired/closed check, and an escrow with empty data rescues at
+once. Refutation: the caller must be a **whitelisted resolver** (a KYC'd,
+permissioned role), which Immunefi's default rules put out of scope
+("attacks requiring access to privileged addresses"); rescue is the intended
+recovery path for tokens stuck after the swap window; the maker can
+`cancel_order` before day 8, and expired orders are cancellable by resolvers
+for the premium by design. No unprivileged path. Not a finding.

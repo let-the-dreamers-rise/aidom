@@ -126,3 +126,129 @@ critical pays ~$25k.
 releases and crates.io API both 403 behind the egress policy). A Clarity PoC
 must be built in an unrestricted environment: `clarinet` project with the
 fetched `.clar` sources + a unit test, or `clarity-repl`.
+
+## state-v1 access control — CHECKED, CLEAN (2026-09-13)
+
+Extracted every `define-public` in state-v1 and its gate. Result: every
+fund-moving or position-mutating function is behind
+`(try! (is-allowed-contract contract-caller))` (governance-managed allowlist
+of trusted contracts: borrower, lp, liquidator, flash-loan) or
+`(asserts! (is-governance) ...)`. Specifically confirmed gated:
+transfer-from (100), transfer-to (108), add-assets (119), remove-assets (138),
+update-borrow-state (703), update-repay-state (738), update-add-collateral
+(764), update-user-collateral (774), update-remove-collateral (782),
+update-liquidate-collateral-state (821), socialize-user-bad-debt (912),
+set-accrued-interest (685, allowed-or-governance). `transfer` (442) is the
+SIP-010 LP-token transfer with the standard sender check. The
+"unprivileged caller erases their own debt" hypothesis is refuted.
+
+Reinforcing detail for the zero-price finding: update-liquidate-collateral-state
+line 849 `(if (> repay-amount u0) (transfer-from ...) SUCCESS)` deliberately
+skips pulling repayment when repay-amount is 0 while line 847 unconditionally
+transfers collateral-to-give to the liquidator. So the state layer has no
+independent guard; the only thing preventing a zero-repay seizure is the
+liquidator's price-gated `ensure-non-zero-repay-amount`. Severity unchanged
+(LOW) because price==0 is not reachable for sBTC/aeUSDC.
+
+Also noted (sound): line 824 forbids liquidating in the same block as the
+borrow; the uint subtractions at 745/826/835 underflow-panic in the safe
+direction.
+
+Agent fan-out attempted at the user's request was killed by the account's
+session rate limit (429, resets 16:30 UTC); continued solo.
+
+## Interest model, staking-reward, withdrawal caps — CHECKED, CLEAN (2026-09-13)
+
+- linear-kinked-ir-v1 `accrue-interest`: elapsed = (prev-block time + 5s) −
+  last-accrued; last-accrued is always a previous such value, so no
+  underflow; elapsed==0 or accrual-disabled returns unchanged values (no double
+  accrual). Compounding is a 6-term Taylor of e^x in 12-dp fixed point; the
+  intermediate `(* x x_5)` overflows uint128 only for x ≳ 1000 (e.g. 100% APR
+  for 1000 years) — unreachable. Taylor truncation *under*-estimates e^x for
+  large x, i.e. under-accrues (hurts LPs marginally, not exploitable).
+  `calc-total-interest` `(- ir one-12)` is safe since taylor-6 ≥ one-12.
+- Theoretical freeze: `utilization-calc` divides by `total-assets` guarded only
+  by `(> (+ total-assets open-interest) u0)`; total-assets==0 with
+  open-interest>0 would panic every accrual and freeze all actions. Requires a
+  fully drained pool with outstanding debt (degenerate state, not attacker
+  reachable). Noted, not reportable.
+- Governance-param DoS class (KNOWN ISSUE per program, not reportable): if
+  staking-reward% > 100% (slope-1 unbounded, base < 1e8 only), line 106
+  `(- lp-interest staked-interest)` underflows and freezes accrual.
+- staking-reward-v1: int math guarded; init-once then governance-only setter.
+- withdrawal-caps-v1: token-bucket limiter; every check/inflow entrypoint is
+  gated to the exact calling contract (LP / borrower / liquidator); refill and
+  decay subtractions are guarded by their branch conditions. Deposits credit
+  the bucket (inflow), which weakens the limiter as a defense-in-depth but
+  cannot exceed a caller's own share balance (state-v1 remove-assets checks
+  shares). Unknown collateral tokens no-op the cap (factor 0) and are rejected
+  later by state-v1. Design, not a bug.
+
+## governance-v1 + meta-governance-v1 — CHECKED, CLEAN (2026-09-13)
+
+Every vote/execute entrypoint (`approve` 1149, `deny` 1169, `close` 1193,
+`execute` 1229, every `initiate-proposal-to-*` via `create-proposal` 296) does
+`(try! (is-governance-member contract-caller))`, which resolves to
+meta-governance-v1's `governance-accounts` map. Double-vote is blocked by
+`has-submitted-vote`; double-execute by `closed`/`executed` flags; votes are
+refused once `execute-at` is set (time-lock armed). Proposal ids are keccak of
+(sender, nonce, action, expires-in, data) with a monotonic nonce, and
+`create-proposal` rejects duplicates. Threshold is integer `approve*100/total
+>= 60`; `total` can never reach 0 (remove-member asserts `>= 1` remains).
+meta-governance's `initialize-governance` is deployer-only, once. Only
+observation: `ACTION_TRANSFER_FUNDS` and `ACTION_UPDATE_PYTH_TOKEN_FEED` are
+not in the `time-locked` map, so a 60% multisig can move funds / repoint the
+oracle instantly — a privileged-actor design choice, out of scope. No
+unprivileged path. Refuted.
+
+## staking-v1 (SP3BJR4...) — REAL BUG FOUND, ALREADY FIXED BY THE PROJECT (2026-09-13)
+
+**Bug.** `slash-total-staked-lp-tokens` (line 200) splits a slash between the
+active pool and the unfinalized-withdrawal pool using a lossy two-step
+rounding: `rate = floor(W*1e8/T)`, `to-slash = floor(lp*rate/1e8)`. Whenever
+`W > 0` and `T` does not divide `W*1e8` (essentially always), `to-slash < W`
+in the wipeout case `lp == T`, so `active-to-slash = T - to-slash > A` and
+`(- total-lp-tokens-staked active-to-slash)` (line 210) **underflows**. Clarity
+uint underflow is a runtime abort, so the whole liquidation transaction
+reverts. Reachability: liquidator-v1 `socialize-bad-debt` (504–549) calls
+state-v1 `socialize-user-bad-debt` → `slash-staked-lp-tokens` (870) which, when
+remaining bad debt ≥ total staked, burns all `T` LP tokens and returns
+`tokens-slashed = T`; the liquidator then calls staking `slash` with exactly
+`T` (line 549). So the final clean-up liquidation of ANY bad-debt position
+larger than the staking pool aborts. Any user can force the precondition
+`W > 0` by staking dust and calling `initiate-unstake` without finalizing.
+Mainnet state of that contract when checked: T = 99,564,830, A = 99,564,781,
+W = 49 → `rate 49, to-slash 48, underflow by 1` (reproduced in Python with
+the exact integer ops). `reconcile-lp-token-balance` has the same family of
+underflow (`(- staked (accounted - balance))` when deficit > active).
+
+**Why it is NOT submittable (honest verdict).** Reading state-v1's event log
+showed the protocol **migrated both markets in Aug 2026**:
+
+- aeUSDC market (state SP35E2...): `set-allowed-contract` for a new set at
+  `SP119QJ4NVE3RQP8RXJVW5EXAV3XD4CJZWRCEEAAR.*` on 2026-08-16 (block 8,776,553),
+  `remove-allowed-contract` for the Immunefi-listed `SP26NGV9...` and
+  `SP3BJR4...` contracts on 2026-08-20, `update-governance` to
+  `SP119...governance-v1` on 2026-08-24.
+- USDCx market (state SP3M2BYF7..., total-assets ≈ $5.0M, the real TVL):
+  same pattern, new set at `SPSX722NK9V3A8D3CVQT0CDY4EBQ3E9FSDDE61FT.*`, old
+  `SP3M2...` liquidator/staking/borrower/lp/flash-loan de-allowlisted.
+
+The new staking-v1 (SP119 / SPSX722, both 15.9 KB, same code line) computes
+`to-slash = lp*W/T` in one division with a zero guard, which is exactly the
+fix, and the new liquidator passes `effective-staked-lp-tokens`. So the bug
+was found and fixed by the team before I got there; the in-scope contract
+that still carries it is de-allowlisted (its liquidator can no longer call
+state-v1, so the path is dead), and the only residual is ~$103 of stuck
+stakers in the old contract. A report would be closed as fixed/no-impact.
+Recorded as a **true positive that was pre-empted**, which is useful
+calibration: the method finds real bugs; the target was stale.
+
+**Scope consequence.** The Immunefi page ("Last Updated 25 July 2026", 31
+assets) predates the migration and lists only the OLD contract sets
+(SP26NGV9, SP3BJR4, SP3M2BYF7, SP35E2 core, plus Pyth/wormhole). The live
+money sits in `SPSX722.*` (USDCx, ~$5M) and `SP119.*` (aeUSDC, ~$97k), which
+are not listed. Those are fresh (published ~Aug 2026), lightly exposed, and
+the program page has not caught up — the best remaining EV on this target.
+Any submission there must state plainly that the scope page lists the
+predecessor deployment; acceptance is at the project's discretion.
