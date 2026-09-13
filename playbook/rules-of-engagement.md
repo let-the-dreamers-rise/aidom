@@ -109,3 +109,20 @@ request. Therefore:
   realistically takes weeks to months.
 - The bottleneck to the first dollar is acceptance, not remittance. Plan for a
   dry stretch and do not let it push the operation toward unverified volume.
+
+## Fee check must be done in the submission form, not on the program page (added 2026-09-13)
+
+StackingDAO's Immunefi page shows no fee anywhere, yet the submission form
+demands 50 USDC per report. Immunefi's pay-to-submit fee is program-specific
+and is only revealed at submit time. New rule: before more than an hour is
+invested in any Immunefi target, the human opens "Submit a Bug" on that
+program, advances to the point where any fee would be displayed, and records
+the result in `targets/targets.json`. A fee found there excludes the program
+from Immunefi submission exactly as a fee on the page would.
+
+When a verified finding exists for a fee-charging program, it is not wasted:
+deliver it by direct responsible disclosure to the project's security contact
+(security.txt, docs, legal-notice email, or a maintainer), privately, with the
+full report, and ask for a discretionary reward. Never disclose publicly and
+never test on mainnet. Direct private disclosure is not a platform-rules
+violation; it is the standard fallback when the platform channel is closed.
