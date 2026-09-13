@@ -7,7 +7,7 @@
 - `SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG.stbtc-reserve`, `.stbtc-token` (listed; the affected pool)
 
 **Severity (self-assessed against the program rubric):** High — "theft / permanent loss of unclaimed yield". A stricter reading is Low ("contract fails to deliver promised returns"); the reasoning for High is in the Impact section.
-**Funds affected:** the entire stBTC pool, 15,249,795,699 sats of stBTC (152.50 BTC) backed by 15,267,691,227 sats of sBTC, of which 15,000,000,000 sats (150 BTC) is bonded into PoX-5. Every sat of the shared sBTC reward stream that should reach this pool is instead paid to the stSTX recipient, the stSTXbtc tracker, the pool owner and the commission contract.
+**Funds affected:** the entire stBTC pool, 15,249,795,699 sats of stBTC (152.50 BTC, about USD 11.8M at USD 77,377/BTC) backed by 15,267,691,227 sats of sBTC, of which 15,000,000,000 sats (150 BTC) is bonded into PoX-5 bond 1, where it is 65% of all bonded sBTC. Under the protocol's own TVL-weighted split the pool's share of the reward stream is about 35%; it receives 0.004%. Shortfall to date about 27.9M sats (0.279 BTC, USD 21.6k); about 19.2M sats (USD 14.8k) more in the release window currently streaming; and, from this reward cycle on, 100% of the rewards earned by the pool's own 150 BTC bond.
 
 ## Summary
 
@@ -85,6 +85,41 @@ The two outputs always sum to 10,000. `w-stbtc` still enters `w-sum`, so a large
 
 `reward-split-calculator-v1` is no longer an active protocol contract in `dao`, so there is no on-chain path that produces a non-zero stBTC share except a direct governance call to `set-split-bps`.
 
+### 5. How the live parameters came about
+
+`reward-split-ops-v1` emitted six `refresh-split` events between blocks 8,800,174 and 8,830,916 (20–24 August 2026, a week after the stBTC launch, with roughly 100 BTC already deposited). Every one of them carried:
+
+```
+t-stbtc u0   t-ststxbtc u26500000000000   t-ststx u54000000000000   r-current-used u1000 (= r-target, boost 0)
+-> ststxbtc-bps u3291, ststx-bps u6708
+```
+
+The keeper never supplied a stBTC TVL, so even the audited v1 calculator was asked to weight stBTC at zero. The live values are 3291 / 6709 (the v1 outputs sum to 9,999; 6709 is exactly `10000 − 3291`, the v2 formula). `reward-split-calculator-v2` and `reward-split-ops-v2` have exactly one transaction each on mainnet, their deployment, and no events, so the first time the keeper refreshes through the new path the zero share is re-asserted by construction, whatever `t-stbtc` is passed.
+
+### 6. What the pool is entitled to, and what it is losing
+
+The calculator is a TVL-weighted split with an stBTC boost; with `r-current = r-target` (which is what the keeper has been passing) it reduces to plain TVL proportion. Using the keeper's own unit (6-decimal STX) and 13 September 2026 spot prices (Kraken / CoinGecko: BTC 77,377 USD, STX 0.2702 USD, so 286,369 STX per BTC):
+
+| leg | TVL | in keeper units (STX) | TVL-proportional share |
+|---|---|---|---|
+| stBTC | 152.50 BTC (USD 11.80M) | 43,670,000,000,000 | **35.2%** |
+| stSTXbtc | 26.5M STX (keeper value) | 26,500,000,000,000 | 21.3% |
+| stSTX | 54.0M STX (keeper value) | 54,000,000,000,000 | 43.5% |
+
+Applied to the measured flows:
+
+| | sats | BTC | USD |
+|---|---|---|---|
+| distributed to date, all legs | 79,394,283 | 0.794 | 61,434 |
+| stBTC entitled share (35.2%) | 27,947,000 | 0.279 | 21,625 |
+| stBTC actually received | 3,186 | 0.00003 | 2.5 |
+| queued in the current release window (`get-streaming-remaining`) | 54,415,200 | 0.544 | 42,105 |
+| stBTC entitled share of that window | 19,154,000 | 0.192 | 14,821 |
+
+A ±30% move in the BTC/STX price ratio moves the stBTC share between roughly 30% and 40%; it does not change the conclusion. A positive boost (the calculator's purpose is to tilt toward stBTC when its yield lags `r-target`) would raise the entitled share further.
+
+**Source of the stream, stated plainly.** The 134.3M sats received so far came from seven STX-only signer managers (`signer-manager-stacking-dao-v1`, `-xverse-v1`, `-juicy-stake-v1`, `-infstones-v1`, `-hashkey-v1`, `-foundry-v1`, `-blockdaemon-v1`). One could argue those rewards were earned by STX, not by stBTC; the protocol's own design says otherwise (a pooled, TVL-weighted split is why `w-stbtc` exists at all), but the forward loss does not depend on that argument: the pool's own 150 BTC bond (`stbtc-staker-bond-1-v2`, 65% of PoX-5 bond 1's 230.17 BTC) entered its first reward cycle, cycle 143, at the time of writing. Its rewards are claimed by `signer-manager-bond-1-v2`, whose `rewards-recipient` is `rewards-pox5-v1`, and therefore go through the same split. From the first claim onward, every sat earned by stBTC depositors' own sBTC is paid to the other legs.
+
 ## Steps to reproduce
 
 No transaction, wallet or capital is needed; the state is live.
@@ -113,7 +148,7 @@ stBTC pool: supply 15,249,795,699 sats, bonded in PoX-5 15,000,000,000 sats
 
 stBTC is marketed as a BTC-yield product ("Bitcoin Staking rewards increase the value of stBTC relative to sBTC"). Its holders have deposited 152.5 BTC; the protocol has bonded 150 BTC of it into PoX-5 signer bonds, whose rewards are claimed into `rewards-pox5-v1`. Those holders are receiving 0.004% of the stream. The yield they are owed under the protocol's own allocation design is being paid, every 30 minutes, to holders of the other two products and to the fee recipients, and once paid it cannot be recovered for stBTC holders. This maps to the program's High tier ("theft / permanent freezing of unclaimed yield", USD 1,000–20,000 by funds at risk). It requires no attacker, which is why a stricter reading is "contract fails to deliver promised returns" (Low); but the loss is concrete, ongoing, measurable on-chain, and structurally locked in by the v2 calculator rather than being a one-off parameter mistake.
 
-The current window has 54.9M sats queued; at the observed rate of roughly 26,000 sats per burn block, about 0.55 BTC is distributed per 2,100-block window, none of it to stBTC.
+The current window has 54.4M sats queued; at the observed rate of roughly 26,000 sats per burn block, about 0.54 BTC (USD 42k) is distributed per 2,100-block window, none of it to stBTC. Its entitled share is about USD 14.8k per window today and will rise once its own bond rewards join the stream.
 
 ## Recommended fix
 
