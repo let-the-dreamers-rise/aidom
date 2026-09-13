@@ -77,7 +77,40 @@ invoked on-chain yet, so this may be a latent misallocation rather than an
 active one, and it is DAO/keeper-triggered, not attacker-driven — worth a
 courtesy note to the team, not a bounty report.
 
-## Still to check
+## PoX-5 reward flow for the protocol's own stakers — CHECKED, CONSISTENT
 
-PoX-5 signer/staker reward split for the protocol's own staker contracts
-(whether staker-side rewards are claimable by the signer managers they use).
+`claim-rewards` (callable by anyone, paid to the signer manager, forwarded to
+rewards-pox5-v1) settles the signer's earnings over ALL shares delegated to
+it, so the protocol's own staker contracts are paid in aggregate. The
+per-staker "earned" ledger in PoX-5 (0.087 / 0.105 BTC for cycles 141/142 on
+stx-staker-stacking-dao-v2) is only the manager-side split view and is never
+zeroed because the manager has no staker-claim function; no sBTC is stuck.
+
+## stSTXbtc reward tracker (ststxbtc-tracking-v2, 2025 code, still live)
+
+**Latent griefing bug, dust impact today.** `save-pending-rewards` is
+`define-public` and ungated. For a DEACTIVATED position P (frozen checkpoint
+D ≠ 0), `get-pending-rewards` computes `(- D holder.cumm)`. Calling
+`save-pending-rewards(victim, P)` saves the victim's pending amount and then
+sets `holder.cumm` to the CURRENT global cumm G > D, so every later
+`get-pending-rewards(victim, P)` underflows and panics; the victim's saved
+rewards for P become unclaimable until the DAO repairs the checkpoint with
+`set-holder-position`. Live deactivated positions: position-zest-v3/v4/v5
+(D = 188,092 / 188,092 / 194,129; G = 293,659) with totals of only 2.21,
+1.71 and 0.50 stSTXbtc — a few sats at risk, so not a High today. It becomes
+material the day the DAO deactivates position-zest-v6 (7.99M stSTXbtc of
+tracked positions). Fix: gate `save-pending-rewards` to protocol callers, or
+checkpoint to `min(G, D)` for deactivated positions. Worth a courtesy report;
+not a payable finding under the program's Critical/High-only tiers.
+
+Design note (not a bug): DeFi positions are tracked by an off-chain-driven
+`refresh-position`; a holder who withdraws from Zest keeps their stale
+position amount until someone refreshes it, so they briefly accrue on both
+wallet and position. Bounded by the reserve-cap check on increases and by
+keeper refresh cadence; pre-existing accepted design.
+
+## Verdict so far
+
+No gate-clearing finding. Two courtesy-grade items (calculator-v2 zero stBTC
+remainder; ungated save-pending-rewards on deactivated positions). The core
+money paths are tight after the August audit.
