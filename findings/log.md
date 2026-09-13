@@ -7,6 +7,7 @@ blindly. Only a row that reaches `submitted` involved a human pressing send.
 | Date | Target | Scope ref | Candidates | Survived gate | Status | Payout |
 |---|---|---|---|---|---|---|
 | 2026-09-12 | ENS standing bounty | ens-contracts @ 121dc23 | 1 (CCIP batch error handling) | 0 (refuted) | nothing_found | — |
+| 2026-09-13 | 1inch smart contracts | cross-chain-swap @ 1.1.0 (EVM + Solana) | 2 (partial-fill index parity; Solana safety-deposit accounting) | 0 (both cleared) | nothing_found | — |
 
 Status values: `auditing` · `nothing_found` · `drafting` · `awaiting_human_signoff` · `submitted` · `accepted` · `paid` · `rejected` · `duplicate`
 
