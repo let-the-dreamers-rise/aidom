@@ -10,7 +10,7 @@ blindly. Only a row that reaches `submitted` involved a human pressing send.
 | 2026-09-13 | 1inch smart contracts | cross-chain-swap @ 1.1.0 (EVM + Solana) | 2 (partial-fill index parity; Solana safety-deposit accounting) | 0 (both cleared) | nothing_found | — |
 | 2026-09-13 | 1inch smart contracts | limit-order-protocol @ 4.3.2 (OrderMixin core) | 0 | 0 | nothing_found | — |
 | 2026-09-13 | Granite Protocol (Immunefi-listed sets) | on-chain Clarity, 15 contracts + meta-governance | 2 (zero-price liquidation seize, LOW; staking slash rounding underflow, real but pre-fixed) | 0 (LOW not worth a report; slash bug fixed by project in Aug-2026 redeploy, listed contracts de-allowlisted) | nothing_submittable | — |
-| 2026-09-13 | Granite Protocol (live SPSX722/SP119 sets) | on-chain Clarity, Aug-2026 redeploy, not yet on scope page | 0 | 0 | auditing | — |
+| 2026-09-13 | Granite Protocol (live SPSX722/SP119 sets) | on-chain Clarity, Aug-2026 redeploy + Pyth Lazer oracle, not yet on scope page | 3 observations (5-min stateless price window; de-listed collateral stuck; staker-interest timing) | 0 (design / governance / dust) | nothing_found | — |
 
 Status values: `auditing` · `nothing_found` · `drafting` · `awaiting_human_signoff` · `submitted` · `accepted` · `paid` · `rejected` · `duplicate`
 

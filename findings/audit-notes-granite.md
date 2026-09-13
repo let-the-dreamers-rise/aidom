@@ -252,3 +252,67 @@ are not listed. Those are fresh (published ~Aug 2026), lightly exposed, and
 the program page has not caught up — the best remaining EV on this target.
 Any submission there must state plainly that the scope page lists the
 predecessor deployment; acceptance is at the project's discretion.
+
+## Live Aug-2026 contract set (SPSX722 USDCx ≈ $5.0M; SP119 aeUSDC) — READ IN FULL, CLEAN (2026-09-13)
+
+Both live sets are byte-identical modulo market principals (usdcx vs aeusdc)
+and the adapter's default time-delta, so one audit covers both. Sources in
+`work/granite/usdcx-new/` (borrower, liquidator, liquidity-provider,
+flash-loan, staking, pyth-adapter, withdrawal-caps, governance) plus the
+SP3M2 state/math/ir/staking-reward/meta-governance (identical to the SP35E2
+copies already audited) and the Pyth Lazer oracle + decoder they now trust.
+
+What changed vs the listed sets, and why each closes an earlier lead:
+
+- **Oracle:** Pyth Lazer (secp256k1 over keccak(payload), single trusted
+  signer, expiry 2031, verify-only, stateless). Price==0 collapses to
+  `none` in the decoder and the adapter asserts `price > 0`, so the LOW
+  zero-price seizure is unreachable here. Adapter freshness: USDCx and
+  aeUSDC markets both initialised with `time-delta 300` (+60 s future
+  tolerance). Exponent bounded to [-18, 11]; confidence bound applied only
+  when present (documented).
+- **Staking:** accrues before computing shares (the stale-rate stake edge
+  is gone), slash uses a single exact division with zero guards, wipeout is
+  `new-active == 0`, finalize-unstake works after wipeout via `safe-sub`,
+  deployer-only `initialize` burns a 1000-unit dust stake. Not yet
+  initialised on mainnet (no stakers), so staked-part is 0 everywhere.
+- **Liquidator:** `LIQUIDATION-BUFFER` 2%, `MINIMUM-LIQUIDATION-BLOCK-GAP`
+  6 (borrowed-block only moves on `borrow`, which needs health at max-LTV,
+  so a liquidatable position cannot refresh it), `safe-sub`/`safe-div` on
+  every interest split, `effective-borrowed-amount = min(debt, principal)`,
+  `ensure-non-zero-repay-amount` unconditional. Verified the C ≥ B
+  invariant (current-debt ≥ recorded principal) is preserved by repay and
+  liquidation, so the `open-interest - total-borrowed` gap cannot go
+  negative from user actions. Not-bad-debt ⇒ collateral ≥ 1.111·debt ⇒
+  taking all collateral clears the debt, so no un-liquidatable "debt with
+  empty collateral list" arises except dust.
+- **LP:** open `initialize` only sets a flag (dust deposit only if supply is
+  0; it is not). withdraw rounds shares up, redeem rounds assets down.
+  Withdrawal caps are a net-outflow token bucket (deposits credit the
+  bucket, so cycling capital cannot beat the cap in net terms); flash loans
+  are permissioned (`allow-any` false, one third-party liquidator bot
+  allowed), so no flash-loan cycling either.
+- **Governance:** 4-of-… multisig on USDCx (count 4), 5 on aeUSDC; several
+  actions (transfer-funds, pyth feed, caps, flags) execute without the
+  6-hour time-lock — privileged, out of scope.
+
+Residual observations, none gate-clearing:
+
+1. Stateless oracle verification means any signed Lazer update from the
+   last 5 min (+60 s) is accepted; there is no "newer than last used"
+   monotonicity as the old Wormhole/pyth-storage path had. A liquidator can
+   pick the lowest BTC print of the window, a borrower the highest.
+   5-minute BTC ranges are usually well inside the 15-point gap between
+   max-LTV (50%) and liquidation-LTV (65%) and the 2% soft-liquidation
+   buffer. Design-level / Medium-at-best; the team set the window
+   deliberately. Not reporting.
+2. A collateral token de-listed by governance cannot be removed by users
+   (`get-collateral-params` unwraps the map) — governance-parameter class,
+   listed as KNOWN ISSUE.
+3. Staked-interest is added to `total-assets` at accrual but the staking
+   contract's LP shares are minted only at repayment, so LPs briefly share
+   staker interest. Value leak of dust, design.
+
+Verdict on Granite: two real bugs found (zero-price seizure LOW, staking
+slash underflow), both already fixed by the Aug-2026 redeploy; the live
+code is clean under this pass. Time to move on.
