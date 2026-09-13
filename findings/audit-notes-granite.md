@@ -98,3 +98,31 @@ as a critical.
 
 Verdict so far: one low/defense-in-depth candidate, no gate-clearing critical
 yet. The accounting core (state-v1) is unread and is where to look next.
+
+## Live on-chain parameters (read 2026-09-13 via Hiro call-read on state-v1)
+
+- sBTC collateral: decimals 8, max-ltv 50%, liquidation-ltv 65%,
+  liquidation-premium 10% (all at SCALING-FACTOR 1e8).
+- LP pool: total-assets 97,730,902,048 (aeUSDC, 6 dp ≈ $97.7k),
+  total-shares 93,765,796,947. Pool is NOT empty → first-depositor
+  share-inflation is not live-exploitable now (only relevant for a fresh
+  market).
+- Debt: open-interest 43,157,180,372 (≈ $43.2k), total-debt-shares
+  29,032,383,023. Borrowable balance ≈ $55.5k.
+- Governance principal = governance-v1 (contract, not an EOA).
+
+**Soft-liquidation denominator check with live numbers:**
+`SCALING - (SCALING + premium) * liq_ltv / SCALING = 1e8 - 1.1e8*0.65 = 0.285e8 > 0`.
+No underflow at current settings. It would underflow only if
+`(1 + premium) * liq_ltv >= 1` (e.g. liq_ltv ≥ 90.9% with a 10% premium),
+which is a governance-parameter-validation issue the program lists as a
+KNOWN ISSUE. Not reportable.
+
+**Payout sizing:** Immunefi critical here is 10% of funds affected with a
+$25k floor and $100k cap; with ~$97k TVL the floor dominates, so any real
+critical pays ~$25k.
+
+**PoC tooling:** `clarinet` cannot be installed in this session (GitHub
+releases and crates.io API both 403 behind the egress policy). A Clarity PoC
+must be built in an unrestricted environment: `clarinet` project with the
+fetched `.clar` sources + a unit test, or `clarity-repl`.

@@ -8,6 +8,8 @@ blindly. Only a row that reaches `submitted` involved a human pressing send.
 |---|---|---|---|---|---|---|
 | 2026-09-12 | ENS standing bounty | ens-contracts @ 121dc23 | 1 (CCIP batch error handling) | 0 (refuted) | nothing_found | — |
 | 2026-09-13 | 1inch smart contracts | cross-chain-swap @ 1.1.0 (EVM + Solana) | 2 (partial-fill index parity; Solana safety-deposit accounting) | 0 (both cleared) | nothing_found | — |
+| 2026-09-13 | 1inch smart contracts | limit-order-protocol @ 4.3.2 (OrderMixin core) | 0 | 0 | nothing_found | — |
+| 2026-09-13 | Granite Protocol | on-chain Clarity (14 contracts) | 1 (zero-price liquidation seize, LOW) + 5 parallel auditors running | pending | auditing | — |
 
 Status values: `auditing` · `nothing_found` · `drafting` · `awaiting_human_signoff` · `submitted` · `accepted` · `paid` · `rejected` · `duplicate`
 

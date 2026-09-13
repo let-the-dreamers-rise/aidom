@@ -66,6 +66,22 @@
       "notes": "Largest live pool found ($34M+ aggregate). Fee status not yet confirmed on a per-program page; check before starting."
     },
     {
+      "name": "Granite Protocol bug bounty",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/granite-protocol/scope/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 100000,
+      "kyc": "required for payout",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-13",
+      "days_since_scope_change": 50,
+      "competition": "low",
+      "deadline": null,
+      "notes": "ACTIVE TARGET (third). Bitcoin lending on Stacks, CLARITY language (small researcher pool = edge). Live since 2025-02-26, updated 2026-07-25, 31 assets pinned by on-chain address. Critical $25k-$100k, High $5k-$25k, Medium $2.5k, Low $1k. PoC required. Known issues: soft-liquidation risk, governance input validation, deployment param validation, references to non-existent methods. Sources fetched from Hiro API into work/granite/. See findings/audit-notes-granite.md."
+    },
+    {
       "name": "HackenProof contests",
       "platform": "HackenProof",
       "url": "https://hackenproof.com/audit-programs",
