@@ -256,6 +256,38 @@
       "competition": "low",
       "deadline": null,
       "notes": "EXCLUDED FROM IMMUNEFI SUBMISSION 2026-09-13: the program page shows no fee, but the submission form demands 50 USDC per report (Immunefi pay-to-submit, shown only at submit time). Two verified findings exist (findings/submissions/stackingdao/); route them by DIRECT responsible disclosure to the team instead. Lesson recorded in playbook/rules-of-engagement.md. ACTIVE TARGET (fourth). Liquid stacking on Stacks, CLARITY. 37 assets under SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG.*, PRIMACY OF IMPACT for Critical/High (any StackingDAO contract with an in-scope impact counts, so the stale-scope problem seen on Granite does not apply). Critical = 10% of funds affected, min $20k, max $100k; High $1k-$20k. PoC required, no KYC, no fee text on the info page. Fresh surface: stBTC product added 13 Aug 2026 (sBTC-bonded PoX-5 signer product, ~152 BTC supply), Clarity Alliance PoX-5 audit 12 Aug 2026 (unfixed items there are ineligible). Deployer is hyperactive (14k deployments, daily DAO proposals). stx-reserve-v2 holds ~9.1M STX. Public GitHub repo lags (last commit Apr 2026); on-chain source via Hiro is authoritative. Sources in work/stackingdao/."
+    },
+    {
+      "name": "Zest Protocol V2 bug bounty",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/zest-protocol-v2/scope/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 100000,
+      "kyc": "vault program, KYC at payout",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
+      "days_since_scope_change": 10,
+      "competition": "low",
+      "deadline": null,
+      "notes": "CANDIDATE (Clarity edge). Lending vaults on Stacks: 12 contracts (v0-vault-usdh/usdc/stx/ststxbtc/ststx/sbtc, v0-market-vault, v0-egroup, v0-assets, vault-traits, dao-multisig, dao-treasury), assets added Jan 2026, page updated 2026-09-03. Critical theft/freeze/insolvency; High unclaimed yield/temporary freeze. Flashloan logic and DAO compromise out of scope. FEE UNKNOWN: human must open Submit a Bug and check before submission; treated as fee-charging until confirmed."
+    },
+    {
+      "name": "sBTC bug bounty (Stacks Endowment)",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/sbtc/scope/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 250000,
+      "kyc": "required for payout",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": null,
+      "days_since_scope_change": 13,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "CANDIDATE. Live 2026-07-02, updated 2026-08-31. Pays LOW $1k flat and MEDIUM $1k-5k (Emily API crash preventing deposit/withdrawal; temporary sBTC tx freeze), which suits our hit rate. 5 assets: Clarity contracts, Emily API (Rust), signer (Rust), deposit lib, WSTS lib at github.com/stacks-sbtc/sbtc. Heavily audited + two attackathons (known issues). Payout in STX. FEE UNKNOWN: human must open Submit a Bug and check."
     }
   ]
 }
