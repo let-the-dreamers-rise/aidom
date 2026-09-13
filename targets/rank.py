@@ -18,8 +18,12 @@ Usage:
 import argparse
 import json
 import math
+import signal
 import sys
 from pathlib import Path
+
+# Let `rank.py | head` exit quietly instead of tracing a BrokenPipeError.
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
 
 COMPETITION_SCORE = {"low": 1.0, "medium": 0.6, "high": 0.3}
 

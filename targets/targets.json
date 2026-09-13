@@ -1,5 +1,5 @@
 {
-  "_comment": "Real programs from the Sept 2026 research, re-checked against live pages on 2026-09-12. Re-verify every figure on the platform before acting; scopes and pools change weekly. max_payout_usd is the program/pool maximum, not the expected payout. days_since_scope_change and competition are operator estimates refreshed from the live scope page. HARD RULE: any target with a submission fee, stake or deposit is excluded — the human puts no money in. rank.py enforces this.",
+  "_comment": "Real programs from the Sept 2026 research, re-checked against live pages on 2026-09-12. Re-verify every figure on the platform before acting; scopes and pools change weekly. max_payout_usd is the program/pool maximum, not the expected payout. days_since_scope_change and competition are operator estimates refreshed from the live scope page. HARD RULE: any target with a submission fee, stake or deposit is excluded \u2014 the human puts no money in. rank.py enforces this.",
   "_schema": {
     "name": "program or contest name",
     "platform": "hosting platform",
@@ -48,22 +48,6 @@
       "competition": "medium",
       "deadline": null,
       "notes": "Backup target. 36 assets in scope: contracts on Arbitrum and Ethereum plus indexer software. Critical $15k-$50k (10% of funds affected). Reproducible script PoC is a strict requirement. Local-fork testing only. Updated 2026-08-27."
-    },
-    {
-      "name": "Immunefi standing bounties (other mid-cap programs)",
-      "platform": "Immunefi",
-      "url": "https://immunefi.com/bug-bounty/",
-      "kind": "standing_bounty",
-      "domain": "web3",
-      "max_payout_usd": 500000,
-      "kyc": "at payout only; 70% paid if declined",
-      "capital_required_usd": 0,
-      "submission_fee": false,
-      "fee_checked": null,
-      "days_since_scope_change": 30,
-      "competition": "medium",
-      "deadline": null,
-      "notes": "Pool of candidates, each must be fee-checked individually before starting: SSV Network ($250k, but last updated 2026-04-09, not fresh), StackingDAO ($100k, 2026-09-02, Clarity language), 1inch smart contracts (launched 2026-06-11). New accounts capped at 1 submission per 24h until first paid report."
     },
     {
       "name": "Cantina standing bounties",
@@ -192,6 +176,54 @@
       "competition": "high",
       "deadline": "2026-09-14",
       "notes": "EXCLUDED while fee-charging: the ENS competition page states a per-report submission fee set by Immunefi and shown at submission time. Check each competition individually; only fee-free ones are eligible."
+    },
+    {
+      "name": "1inch smart contracts bug bounty",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/1inch-SmartContracts/scope/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 500000,
+      "kyc": "required for payout",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-13",
+      "days_since_scope_change": 30,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "ACTIVE TARGET (second). Program live since 2026-06-11, updated 2026-08-14. Scope = 8 GitHub repos at their LATEST TAG/RELEASE only: limit-order-protocol, fusion-protocol (Limit Order Settlement), token-plugins, farming, delegating, cross-chain-swap, solana-crosschain-protocol, solana-fusion. Critical $30k-$500k (10% of funds affected; must be live on mainnet), High $10k-$30k, Medium $2k-$10k, Low $100-$2k. PoC always required. Must report within 24h of discovery. Out of scope: imported contracts, fee-on-transfer incompatibility, economic/oracle/liquidity attacks, centralisation, theoretical. FLAG: program text lists 'AI-generated reports' under prohibited activities. Any report here must be authored and submitted by the human in their own words from the verified finding and PoC; machine drafts are internal only."
+    },
+    {
+      "name": "USDT0 bug bounty",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/usdt0/information/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 6000000,
+      "kyc": "required for all reporters (ID, proof of address, invoice, OFAC screen)",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-13",
+      "days_since_scope_change": 12,
+      "competition": "high",
+      "deadline": null,
+      "notes": "Backup. Live since 2025-01-30, updated 2026-09-01, 44 assets. Critical min $50k, max $6M EVM / $1M non-EVM; Medium $5k flat. LayerZero OFT wrapper: reports in LayerZero's scope get forwarded there. Big pool = crowded."
+    },
+    {
+      "name": "SSV Network bug bounty",
+      "platform": "Immunefi",
+      "url": "https://immunefi.com/bug-bounty/ssvnetwork/scope/",
+      "kind": "standing_bounty",
+      "domain": "web3",
+      "max_payout_usd": 250000,
+      "kyc": "required",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-13",
+      "days_since_scope_change": 400,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "Deprioritised: scope assets unchanged since Aug 2023 despite a 2026-09-13 'updated' stamp. Five known issues listed. Critical $50k-$250k, High $30k, Medium $10k, Low $1.5k."
     }
   ]
 }
