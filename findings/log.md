@@ -76,3 +76,4 @@ wrote her reaction). High, CVSS ~7.1 (sibling friends IDOR was 8.3). Duplicate-
 checked: no CVE covers this endpoint. See audit-notes-lollms.md + submissions/lollms/.
 Awaiting Gate 4 (human reproduces + rewrites in own words + submits). File-read
 class found largely hardened (secure_filename + containment everywhere now).
+| 2026-09-14 | GitLab (gitlab-org/gitlab, HackerOne) | gitlab-src 19.4.0-pre master | GraphQL authz gaps | 0 | nothing_found | Defense-in-depth: type-level authorize gates resolver .find; bulk runner ops authorize per-object in service; new AI mutations use authorize_granular_token. Hardened. Pivoted to Mattermost. |
