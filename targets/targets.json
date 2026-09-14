@@ -1,5 +1,5 @@
 {
-  "_comment": "Real programs from the Sept 2026 research, re-checked against live pages on 2026-09-12. Re-verify every figure on the platform before acting; scopes and pools change weekly. max_payout_usd is the program/pool maximum, not the expected payout. days_since_scope_change and competition are operator estimates refreshed from the live scope page. HARD RULE: any target with a submission fee, stake or deposit is excluded \u2014 the human puts no money in. rank.py enforces this.",
+  "_comment": "Real programs from the Sept 2026 research, re-checked against live pages on 2026-09-12. Re-verify every figure on the platform before acting; scopes and pools change weekly. max_payout_usd is the program/pool maximum, not the expected payout. days_since_scope_change and competition are operator estimates refreshed from the live scope page. HARD RULE: any target with a submission fee, stake or deposit is excluded — the human puts no money in. rank.py enforces this.",
   "_schema": {
     "name": "program or contest name",
     "platform": "hosting platform",
@@ -288,6 +288,22 @@
       "competition": "medium",
       "deadline": null,
       "notes": "CANDIDATE. Live 2026-07-02, updated 2026-08-31. Pays LOW $1k flat and MEDIUM $1k-5k (Emily API crash preventing deposit/withdrawal; temporary sBTC tx freeze), which suits our hit rate. 5 assets: Clarity contracts, Emily API (Rust), signer (Rust), deposit lib, WSTS lib at github.com/stacks-sbtc/sbtc. Heavily audited + two attackathons (known issues). Payout in STX. FEE UNKNOWN: human must open Submit a Bug and check."
+    },
+    {
+      "name": "Feast (feast-dev/feast)",
+      "platform": "GitHub Security Advisories (no confirmed paid huntr program)",
+      "url": "https://github.com/feast-dev/feast/security/advisories",
+      "kind": "standing_bounty",
+      "domain": "ai_product",
+      "max_payout_usd": 0,
+      "kyc": "n/a",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-14",
+      "days_since_scope_change": 0,
+      "competition": "high",
+      "deadline": null,
+      "notes": "AUDITED 2026-09-14 -> nothing_submittable. Registry gRPC server (default no_auth, port 6570) has a real, HEAD-unpatched pre-authorization RCE: ApplyMaterialization (exec/dill via resolve_udf, core-only) and ApplyValidationReference (dill via GEProfiler, needs ge extra) evaluate <Object>.from_proto() before assert_permissions*. Verified end-to-end (3 PoCs, uid=0). BUT it is a DUPLICATE of public CVE-2026-18948 (CVSS 9.9, published 2026-08-10, same sinks/root cause) + the narrower CVE-2026-56121 (fixed 0.63.0). Do not submit. Channel is GHSA (credit, likely no cash) and SECURITY.md rejects AI-generated reports. Post-CVE hardening target; pivot away. See findings/audit-notes-feast.md."
     }
   ]
 }
