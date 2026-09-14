@@ -389,3 +389,31 @@ GraphQL resolvers/types that resolve a resource by guessable/global ID or expose
 type/field without an `authorize :read_*`/policy check, focused on fresh 19.x features.
 Operator is creating the H1 account. Clone in progress (gitlab.com throttles blobless
 partial clones; using plain shallow clone w/ retries + GitHub mirror fallback).
+
+## UPDATE 2026-09-14 #9 — GitLab + Mattermost both hardened; the structural wall
+
+Pivoted to HackerOne paying targets and hunted access-control bugs (my edge):
+- **GitLab 19.4** GraphQL: defense-in-depth. Type-level `authorize :read_*` gates
+  resolver `.find`; bulk ops authorize per-object in services; new AI mutations use
+  `authorize_granular_token`. Nothing found.
+- **Mattermost 11.x + Playbooks**: layered authz. Core api4 fresh features (recap,
+  agents, access-control, property fields) all guarded; the whole playbook checklist-
+  mutation cluster is gated by a `checkEditPermissions` router middleware
+  (`RunManageProperties`); playbook property-fields check `PlaybookEdit`; GraphQL
+  `Playbook(id)` checks `PlaybookView`. Nothing found.
+
+**Empirical conclusion of the session:** every mature target that PAYS (GitLab,
+Mattermost, Vercel/ai-chatbot, Nextcloud, Feast core, transformers, mlflow, ray,
+bentoml) is well-hardened — their bug classes were found and fixed and they now apply
+layered authorization. The only real, novel bug found all session (lollms DM-reactions
+IDOR) is on a channel that pays no cash (GHSA-only). This is the structural wall: the
+"solo in-sandbox code auditor → cash bounty" niche has a low hit-rate on the paying
+targets currently reachable, because those targets are precisely the ones that have
+been hardened. Fresh/soft targets (lollms) don't pay; paying targets are hard.
+
+Realistic options going forward (operator's call):
+1. File the **lollms IDOR as a GitHub Security Advisory** → CVE + credit (reputation,
+   not cash). Banked in findings/submissions/lollms/.
+2. Accept a **long, low-hit-rate campaign** across many fresh HackerOne self-hostable
+   targets (one bug per N targets), rather than deep single-target dives.
+3. Rethink the money model — the in-sandbox code-audit-for-bounty edge is thin in 2026.
