@@ -315,3 +315,39 @@ paid-track finding remains **StackingDAO** (direct private disclosure; follow up
 (3) target NEWLY-launched code (days old, fewest eyes, no CVE yet) — freshness is
 the only durable edge. Add a step (0): run the public-CVE/advisory duplicate check
 before investing in any AI/ML target — these repos are now heavily CVE'd.
+
+## UPDATE 2026-09-14 #7 — FIRST huntr-submittable finding: lollms DM IDOR
+
+Applied the #6 lesson (duplicate-check FIRST). Instead of grinding another
+CVE-saturated headliner, used WebSearch recon to pick a FRESH, funded, softer
+target: **parisneo/lollms** — a rewritten FastAPI social app (`backend/routers/`)
+that keeps earning 2026 huntr bounties, with a maintainer who patches one endpoint
+and leaves siblings. Hunted siblings of the known IDOR/path-traversal/SSRF CVEs.
+
+**FINDING (submittable, High): DM reactions IDOR.**
+`POST /api/dm/messages/{message_id}/reactions` (`toggle_dm_reaction`,
+backend/routers/social/dm.py) fetches a DirectMessage by integer PK with **no
+participant check** and returns `DirectMessagePublic` (includes `content`). Any
+authenticated user reads EVERY private DM by enumerating the id (+ writes reactions
+to arbitrary messages). Registration open by default. **Verified on today's HEAD
+`a744154`** with a PoC that runs the real endpoint function (attacker eve read
+alice→bob private content + wrote her reaction). High, CVSS ~7.1 (sibling friends
+IDOR CVE-2026-0562 was 8.3). **Duplicate-checked**: no CVE covers this endpoint;
+CVE-2026-12228 is a *write* XSS into DM content, a different bug. Cleared self-
+refutation Gates 1–3. See `findings/audit-notes-lollms.md` and
+`findings/submissions/lollms/` (report + runnable PoC + reproduce steps).
+
+**NEXT ACTION (human, Gate 4):** reproduce the PoC, re-confirm no duplicate on
+huntr, rewrite the report in your own words (huntr closes verbatim AI text), submit.
+This is the first fresh submittable finding since StackingDAO — payout track.
+
+**More EV in the same target:** lollms social/resource routers (dm.py, friends,
+groups, discussion_groups, notes, image/voice studios, stores.py) are large and the
+maintainer fixes IDORs one at a time — a systematic missing-owner-filter sweep and
+an SSRF-fetcher sweep (siblings of CVE-2026-0560) are likely to yield more. Report
+each as a SEPARATE verified report; never bundle/farm. The file-READ path-traversal
+class there is now largely hardened (secure_filename + containment everywhere).
+
+Refined playbook step 0 (now proven twice): before touching a target, WebSearch
+"<target> CVE 2026 RCE/IDOR/path traversal" — it both kills duplicates (Feast) and
+maps where the soft spots are (lollms).

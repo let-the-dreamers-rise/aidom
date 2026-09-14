@@ -57,3 +57,22 @@ submitted. Also: Feast discloses via GHSA (no confirmed paid channel), and its
 SECURITY.md rejects AI-generated reports. Pivot away from Feast. See
 `audit-notes-feast.md`; PoCs kept as evidence in `submissions/feast/` (marked
 NON-SUBMITTABLE).
+| 2026-09-14 | lollms (parisneo/lollms) | lollms-src HEAD a744154 (FastAPI social app, backend/routers) | 1 (DM reactions IDOR: read any private DM + write reactions, unreported) | 1 (cleared Gates 1-3, PoC runs real endpoint) | awaiting_human_signoff | pending |
+
+## 2026-09-14 — lollms: DM reactions IDOR (SUBMITTABLE)
+
+Applied the Feast lesson: duplicate-check-FIRST recon picked lollms — a fresh,
+funded, fast-moving FastAPI social app that keeps earning 2026 huntr bounties
+(path traversal, SSRF, friends IDOR, prompts XSS), with a maintainer who patches
+one endpoint and leaves siblings. Hunted siblings of CVE-2026-0562 (friends IDOR).
+
+Found: `POST /api/dm/messages/{message_id}/reactions` (`toggle_dm_reaction`,
+backend/routers/social/dm.py) fetches a DirectMessage by integer PK with NO
+participant check and returns DirectMessagePublic (incl. content). Any
+authenticated user reads EVERY private DM by enumerating the id, and writes
+reactions to arbitrary messages. Registration open by default. Verified on today's
+HEAD with a PoC that runs the real endpoint (attacker eve read alice→bob content +
+wrote her reaction). High, CVSS ~7.1 (sibling friends IDOR was 8.3). Duplicate-
+checked: no CVE covers this endpoint. See audit-notes-lollms.md + submissions/lollms/.
+Awaiting Gate 4 (human reproduces + rewrites in own words + submits). File-read
+class found largely hardened (secure_filename + containment everywhere now).

@@ -304,6 +304,22 @@
       "competition": "high",
       "deadline": null,
       "notes": "AUDITED 2026-09-14 -> nothing_submittable. Registry gRPC server (default no_auth, port 6570) has a real, HEAD-unpatched pre-authorization RCE: ApplyMaterialization (exec/dill via resolve_udf, core-only) and ApplyValidationReference (dill via GEProfiler, needs ge extra) evaluate <Object>.from_proto() before assert_permissions*. Verified end-to-end (3 PoCs, uid=0). BUT it is a DUPLICATE of public CVE-2026-18948 (CVSS 9.9, published 2026-08-10, same sinks/root cause) + the narrower CVE-2026-56121 (fixed 0.63.0). Do not submit. Channel is GHSA (credit, likely no cash) and SECURITY.md rejects AI-generated reports. Post-CVE hardening target; pivot away. See findings/audit-notes-feast.md."
+    },
+    {
+      "name": "lollms (parisneo/lollms)",
+      "platform": "huntr (OSV)",
+      "url": "https://huntr.com/repos/parisneo/lollms",
+      "kind": "standing_bounty",
+      "domain": "ai_product",
+      "max_payout_usd": 4000,
+      "kyc": "at payout (Stripe Connect)",
+      "capital_required_usd": 0,
+      "submission_fee": false,
+      "fee_checked": "2026-09-14",
+      "days_since_scope_change": 0,
+      "competition": "medium",
+      "deadline": null,
+      "notes": "ACTIVE + FRESH. Rewritten FastAPI social app (backend/routers), fast feature velocity, funded on huntr (monthly Stripe), lower hardening bar than corporate repos. Recurring 2026 bounties: CVE-2026-10595 (ui.py path traversal), CVE-2026-0560 (files.py SSRF), CVE-2026-0562 (friends IDOR, 8.3), CVE-2026-12228 (prompts stored XSS). Maintainer patches one endpoint, leaves siblings -> sibling hunt is high-EV. FINDING 2026-09-14: DM reactions IDOR (POST /api/dm/messages/{id}/reactions) reads any private DM + writes reactions, High ~7.1, verified PoC, awaiting_human_signoff (submissions/lollms/). File-read class now largely hardened. More IDOR/SSRF siblings likely in social/dm.py, friends, groups, stores.py, image/voice studios."
     }
   ]
 }
