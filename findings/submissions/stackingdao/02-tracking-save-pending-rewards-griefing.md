@@ -49,7 +49,7 @@ The holder cannot recover on their own: `refresh-position` asserts the position 
 | position-zest-v5 | false | 194,129 | 500,000 |
 | position-zest-v6 | true | — | 7,988,255,302,396 |
 
-Global `cumm-reward` = 293,659 > D for all three deactivated positions, so the underflow is reachable today for any of their holders who has not yet claimed.
+Global `cumm-reward` = 293,987 > D for all three deactivated positions, so the underflow is reachable today for any of their holders who has not yet claimed. The included read-only verifier `verify_tracking_griefing.py` reproduces this table live from the Hiro API (no wallet, no transaction).
 
 ## Steps to reproduce (Clarinet simnet; no mainnet interaction)
 
@@ -71,4 +71,4 @@ Griefing with no attacker profit today (dust at risk). On the next deactivation 
 
 ## Reward
 
-Submitted as a defence-in-depth finding at Low today with a documented path to High. I would ask the team to consider it under their discretionary policy; the fix is two lines and prevents a real freeze on the next position migration.
+Delivered privately to the StackingDAO team as a companion to the stBTC reward-split report (report 01), at Low today with a documented path to High. Requested for consideration under the team's discretionary policy; the fix is two lines and prevents a real freeze on the next position migration.
