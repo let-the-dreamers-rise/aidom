@@ -258,3 +258,22 @@ Autonomous options that do not need the human (lower EV, higher usage cost):
   deep multi-hour hunt for a subtler class (auth/tenant IDOR, logic, race) on a
   chosen target — higher cost, uncertain yield. Blind cloning of flagships is
   exhausted.
+
+## UPDATE 2026-09-14 #5 — Zest V2 (Clarity) also well-defended; final state
+
+Deep-audited Zest V2 (my Clarity edge, less-hunted): Strategy Vault (zv-engine/
+ops/state) and lending liquidation core (v0-8-market). Both professionally
+hardened — inflation attack (dead shares), redeem token pinned + engine-gated,
+conservative rounding everywhere, liquidation has health check + close factor +
+same-block guard + EOA-only + oracle confidence bounds. No high-confidence bug.
+(Foundry source build FAILED — rustc 1.94 too old — so EVM stays closed.)
+
+FINAL STATE: 8 deep audits this session (anything-llm, gradio, langchain-
+community, mlflow, bentoml, transformers, ray, Zest V2) — all hardened or
+no-cash. The operation's one verified finding remains StackingDAO (in direct
+private disclosure). The honest path to money now:
+1. StackingDAO follow-up (due 2026-09-18) — the real near-term result.
+2. huntr less-hunted-program list — needs a human 2-min browse of
+   huntr.com/bounties (machine can't render the JS/TLS-pinned page).
+3. Or accept that mature targets are dry and pick a NEWLY-launched protocol/
+   library (days-old code, fewest eyes) — freshness is the only durable edge left.
