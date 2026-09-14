@@ -417,3 +417,28 @@ Realistic options going forward (operator's call):
 2. Accept a **long, low-hit-rate campaign** across many fresh HackerOne self-hostable
    targets (one bug per N targets), rather than deep single-target dives.
 3. Rethink the money model — the in-sandbox code-audit-for-bounty edge is thin in 2026.
+
+## UPDATE 2026-09-14 #10 — money-model verdict + the only paths with real EV
+
+Session result: ~11 targets audited, exactly ONE novel bug (lollms IDOR), and it's on a
+no-cash channel (banked as a GHSA — findings/submissions/lollms/GHSA-submission.md).
+Documenso had a real gap but overlaps CVE-2026-85697. Verdict: **the "solo in-sandbox
+clone→audit→cash-bounty" loop is structurally starved** — huntr killed standing OSS
+bounties (challenges-only), the payers are hardened, the soft targets don't pay.
+
+Paths that still have non-trivial EV, ranked (all honest about low odds):
+1. **huntr Challenges** (huntr.com/challenges) — this is where huntr's money went
+   ($15k agent-jailbreak/prompt-injection contests). DIFFERENT skill (break an AI agent
+   to leak its secrets/tools), but in-sandbox-friendly and it's the actual current cash.
+   Watch for the next open challenge; time-boxed + competitive.
+2. **Breadth campaign on confirmed-paying self-hostable products** — channel-confirm
+   FIRST (only they can see "Bounties $"), then fast IDOR/authz passes (not deep dives)
+   across many newer VC-backed products, accepting ~1 hit per N targets. lollms-style win
+   but on a payer. Needs the human to shortlist payers.
+3. **Incomplete-fix hunting** — HEAD-vs-recent-CVE diffs for residual gaps (the Documenso
+   pattern). Maintainers pay for "you thought you fixed this, you didn't." Medium EV.
+
+Honest bottom line for the operator: bounties-from-zero are a low-probability lottery,
+not income. This session produced reputation (a CVE) and a repeatable method, not cash.
+If cash is a hard requirement, #1 is the best-fit paid channel now; otherwise treat the
+CVE track as portfolio-building.
