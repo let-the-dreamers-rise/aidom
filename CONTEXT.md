@@ -165,3 +165,78 @@ finding (tracking griefing) is held in reserve. See
   render auth'd/SPA pages; do NOT disable TLS verification to work around it.
 - Verify Clarity/on-chain findings read-only via the Hiro API (no wallet).
 - Branch: `claude/busy-clarke-4vys29`. Commit + push so the other session syncs.
+
+## UPDATE 2026-09-14 (payment-status lesson — READ THIS)
+
+IMPORTANT: do NOT assume a project pays cash just because it is in
+`protectai/ai-exploits`. Projects have migrated to no-cash GitHub Security
+Advisory (GHSA) programs. Verify each target's `SECURITY.md` before investing.
+- **gradio**: DROPPED — SECURITY.md says "We do not offer a monetary bounty"
+  (HuggingFace, GHSA + CVE credit only). Its `/file=` read path is also hardened
+  (`is_in_or_equal` resolves symlinks on both sides). Fresh SSRF surface exists
+  (`secure_url_stream_response` → safehttpx) but it pays no cash, so not worth it.
+- Confirmed still-CASH huntr programs (2026 public data): **mlflow (~$1.5k),
+  Triton (~$1.5k), LangChain (~$4k), Hugging Face Transformers ($50k top)**.
+- **This session is now on LangChain** (langchain + langchain-community).
+  Parallel session: take Hugging Face Transformers (loaders/deserialization).
+  Do not both take LangChain.
+- LangChain caveat: many code-exec paths are intentionally gated behind
+  `allow_dangerous_*` flags and are OUT of scope. A payable bug must be reachable
+  through safe-by-default usage (SSRF, path traversal, SSTI, injection, or an
+  unflagged deserialization) in a supported integration.
+
+## UPDATE 2026-09-14 #2 — more dead ends, now on HF Transformers
+
+- **langchain-community**: DROPPED — repo HEAD is "sunset package" (2026-06-19).
+  A discontinued package does not pay bounties. (LangChain core/`langchain`
+  packages may still be huntr-scoped, but the juicy integration surface that
+  used to live in community is EOL.)
+- Tally of dead ends: anything-llm (GHSA no-cash), gradio (HF no-bounty),
+  langchain-community (sunset); mlflow + bentoml (hardened in checked areas).
+- **This session now on Hugging Face Transformers** ($50k top pool, active).
+  Payable class = code-exec or path traversal on a SAFE-BY-DEFAULT load path
+  (NO `trust_remote_code`): e.g. a malicious model repo whose member filenames
+  traverse out of the HF cache (arbitrary write), or a config/tokenizer/
+  processor/pipeline loader that reaches `pickle`/`torch.load`/`exec` without
+  the user opting into remote code. Bugs that require `trust_remote_code=True`
+  or loading an untrusted pickle model are OUT of scope (user responsibility).
+- Parallel session: take **mlflow's unaudited new surface** (`assistant/`+
+  `sandbox/`, `gateway_api.py`, `graphql/`, `mcp_server_api.py`) or **Triton**.
+
+## UPDATE 2026-09-14 #3 — HF Transformers obvious classes are hardened
+
+- Deserialization sinks: the only non-`convert_*.py` (runtime-reachable) ones
+  are gated. `wav2vec2/modeling_wav2vec2.py` uses `check_torch_load_is_safe()` +
+  `torch.load(weights_only=True)`. `rag/retrieval_rag.py` `pickle.load` is behind
+  the `TRUST_REMOTE_CODE` env gate. All other `torch.load`/`pickle`/`np.load` hits
+  are in maintainer-only conversion scripts (not attacker-reachable).
+- Chat-template SSTI: rendered with `ImmutableSandboxedEnvironment`
+  (`utils/chat_template_utils.py:489`) — sandboxed, no SSTI.
+- Not yet checked (if continuing Transformers): path-traversal *write* via
+  attacker repo filenames (shard index `weight_map`, adapters, added-tokens,
+  generation_config) constructing local cache paths; but most path handling is
+  in `huggingface_hub`, which sanitizes. Diminishing returns.
+
+## HONEST STATE OF THE OPERATION (read before spending more usage)
+
+The accessible, PoC-able, confirmed-CASH OSS AI/ML targets have their obvious and
+medium vulnerability classes systematically defended (mlflow, bentoml,
+transformers) or have moved to no-cash GHSA/EOL (gradio, anything-llm,
+langchain-community). Blind-cloning more staples is low expected value.
+
+Two genuinely higher-EV moves, both needing a human step:
+1. **Get huntr's funded-program list.** The machine cannot render huntr.com/
+   bounties (SPA + proxy-CA/TLS). A human browsing that page for ~2 minutes and
+   pasting the program names unlocks targeting *less-hunted* funded programs,
+   which is where fresh bugs actually are. This is the single highest-leverage
+   unblock.
+2. **Follow up the StackingDAO disclosure** (already sent, direct private). That
+   is the one verified finding and the most likely near-term money. DM
+   @StackingDAO on X if no reply by 2026-09-18; send report 02 after ack.
+
+Autonomous options that do not need the human (lower EV, higher usage cost):
+- Deep, subtle audit of one big target's less-obvious surface (e.g. mlflow's
+  unaudited `assistant`/`gateway`/`graphql`, or Transformers path-write).
+- Verify + audit a less-Python-hunted confirmed target: **h2o** (Java; LFI +
+  POJO-import RCE surface) or **ray** (file-read/SSRF/authz, since job RCE is
+  "intended"). Confirm each still pays before investing.
