@@ -351,3 +351,41 @@ class there is now largely hardened (secure_filename + containment everywhere).
 Refined playbook step 0 (now proven twice): before touching a target, WebSearch
 "<target> CVE 2026 RCE/IDOR/path traversal" — it both kills duplicates (Feast) and
 maps where the soft spots are (lollms).
+
+## UPDATE 2026-09-14 #8 — CHANNEL REALITY CHECK (read before hunting anything)
+
+Two channel collapses this session. The operation's core premise ("huntr = open,
+fee-free standing bounties for OSS AI/ML = money") is STALE:
+
+- **huntr no longer runs standing per-repo bounties.** `huntr.com/bounties` 404s.
+  huntr migrated to time-boxed **Challenges** (AI-agent jailbreak contests, e.g.
+  "Inside Job" $15k). No general OSS code-disclosure bounties. So a real OSS bug has
+  **no huntr cash home** anymore.
+- **Feast** = verified pre-auth RCE at HEAD but a DUPLICATE of public CVE-2026-18948
+  (see #6). Not submittable.
+- **lollms** = real, novel, verified High IDOR (see #7) but Feast/huntr channel is
+  dead and lollms only discloses via GHSA → **CVE + credit, no cash.** The finding is
+  banked (findings/submissions/lollms/) and can be filed as a GHSA for reputation.
+
+**Root-cause lesson: confirm the payout CHANNEL is live+paying BEFORE auditing.**
+Twice now I audited first and hit a dead channel. New step 0, before cloning anything:
+1. Public-CVE duplicate check (killed Feast).
+2. **Confirm the target is on a channel that pays CASH right now** (killed huntr).
+
+**Target-profile lesson:** flagship OSS on paying platforms (Vercel/ai-chatbot,
+Nextcloud) = hardened (every ownership check present — audited ai-chatbot 2026-09-14,
+dry). Fresh/sloppy OSS (lollms) = bugs but no cash. The winning intersection =
+**a fast-shipping, less-security-mature product that runs a PAID bounty and is
+self-hostable** (VC-backed startup w/ OSS core + bounty), OR a giant that pays and
+keeps shipping fresh code with recurring bug classes.
+
+**NEW DIRECTION (operator-chosen 2026-09-14):** platform = **HackerOne** (free to
+report, no fee — satisfies the no-capital rule; Immunefi EXCLUDED for hidden
+pay-to-submit fees). First target = **GitLab** (famous H1 program, pays up to $10k+,
+fully OSS Ruby/Rails, self-hostable). Hunt = **GraphQL authorization gaps** — 2026 saw
+3 GitLab GraphQL flaws (incl. CVE-2026-19478 unauth project delete) and an ML Model
+Registry IDOR via guessable incremental IDs that paid $1,160. Hunting siblings:
+GraphQL resolvers/types that resolve a resource by guessable/global ID or expose a
+type/field without an `authorize :read_*`/policy check, focused on fresh 19.x features.
+Operator is creating the H1 account. Clone in progress (gitlab.com throttles blobless
+partial clones; using plain shallow clone w/ retries + GitHub mirror fallback).
