@@ -240,3 +240,21 @@ Autonomous options that do not need the human (lower EV, higher usage cost):
 - Verify + audit a less-Python-hunted confirmed target: **h2o** (Java; LFI +
   POJO-import RCE surface) or **ray** (file-read/SSRF/authz, since job RCE is
   "intended"). Confirm each still pays before investing.
+
+## UPDATE 2026-09-14 #4 — ray also hardened; 7 targets audited, all defended
+
+- **ray** dashboard log serving: `_resolve_filename` (log_agent.py:310) blocks
+  `..` and absolute paths (os.path.abspath + relative_to containment). Symlink-
+  following inside the log dir is deliberate (documented) and needs local symlink
+  creation — not a standalone remote LFI. `routes.static("/logs")` uses aiohttp
+  defaults (no symlink follow, `..` blocked). Ray's channel is
+  security@anyscale.com; huntr cash status unconfirmed.
+- CONCLUSION after 7 targets (anything-llm, gradio, langchain-community, mlflow,
+  bentoml, transformers, ray): every accessible confirmed/likely-cash target is
+  hardened against the classes a code-reader can quickly find + PoC (path
+  traversal, deserialization, SSRF, template injection). The obvious/medium fruit
+  is gone. Further progress needs either (1) the huntr funded-program list to
+  reach LESS-hunted programs (human pastes it from huntr.com/bounties), or (2) a
+  deep multi-hour hunt for a subtler class (auth/tenant IDOR, logic, race) on a
+  chosen target — higher cost, uncertain yield. Blind cloning of flagships is
+  exhausted.
