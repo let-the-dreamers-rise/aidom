@@ -34,3 +34,26 @@ was covered, what was not, and the one lead worth continuing.
 | 2026-09-14 | ray dashboard (channel: security@anyscale.com; huntr cash unconfirmed) | ray-src HEAD 65127d7 | log/file path traversal (LFI) | 0 | nothing_found | _resolve_filename blocks ../ + absolute via abspath+relative_to; symlink-follow is deliberate/local-only; aiohttp static default-guarded |
 | 2026-09-14 | Zest V2 Strategy Vault (Clarity, my edge) | work/zest zv-engine/ops/state | share-price/NAV manip; redeem wrong-token withdrawal; fee dilution | 0 | nothing_found | dead-shares vs inflation; redeem token pinned to stBTC + engine-gated; min(quoted,claimable); conservative rounding |
 | 2026-09-14 | Zest V2 lending core (Clarity) | work/zest v0-8-market liquidation | healthy-liquidation; liquidator over-seize; close-factor bypass | 0 | nothing_found | health check (ltv>=partial), close-factor cap, same-block guard, EOA-only, conservative rounding, dust handling all correct |
+| 2026-09-14 | feast (feast-dev/feast) | feast-src HEAD b7a8928 (registry gRPC server, no_auth default) | 2 pre-auth RCE handlers: ApplyMaterialization (exec/dill via resolve_udf, core-only) + ApplyValidationReference (dill via GEProfiler, needs ge extra) | 0 (verified real + 3 runnable PoCs, but DUPLICATE of public CVE-2026-18948) | nothing_submittable | — |
+
+## 2026-09-14 — feast: real pre-auth RCE, but duplicate of CVE-2026-18948
+
+Hunted siblings of CVE-2026-56121 (ApplyFeatureView dill.loads-before-authz, fixed
+0.63.0 via skip_udf). Found the skip_udf fix was applied only to ApplyFeatureView:
+`ApplyMaterialization` and `ApplyValidationReference` still evaluate
+`<Object>.from_proto(request...)` as the `resource=` argument to `assert_permissions*`,
+so attacker UDF bytes hit `exec(body_text)`/`dill.loads(body)` (via `resolve_udf`)
+and `dill.loads` (via `GEProfiler`) before authorization. Default `no_auth` config =
+unauthenticated; auth-enabled = any authenticated principal. Verified end-to-end on
+HEAD with three runnable PoCs (unauth network RCE as uid=0 on the real gRPC server;
+plus an ordering proof). Still unpatched at HEAD.
+
+Killed at the self-refutation duplicate gate: this is a specific instance of
+**CVE-2026-18948** ("Unsafe dill deserialization of registry-stored UDFs", CVSS 9.9,
+published 2026-08-10), which names the same sinks (python_transformation.py:168,
+ge_profiler.py:158, …) and the same "from_proto before assert_permissions_to_update"
+root cause. Submitting = duplicate of a public Critical CVE → no pay, ban risk. Not
+submitted. Also: Feast discloses via GHSA (no confirmed paid channel), and its
+SECURITY.md rejects AI-generated reports. Pivot away from Feast. See
+`audit-notes-feast.md`; PoCs kept as evidence in `submissions/feast/` (marked
+NON-SUBMITTABLE).

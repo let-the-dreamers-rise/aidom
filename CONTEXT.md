@@ -277,3 +277,41 @@ private disclosure). The honest path to money now:
    huntr.com/bounties (machine can't render the JS/TLS-pinned page).
 3. Or accept that mature targets are dry and pick a NEWLY-launched protocol/
    library (days-old code, fewest eyes) — freshness is the only durable edge left.
+
+## UPDATE 2026-09-14 #6 — Feast: verified real RCE, but DUPLICATE of public CVE
+
+Followed the recon lead into **feast-dev/feast** (registry gRPC server). Hunted
+siblings of CVE-2026-56121 (ApplyFeatureView `dill.loads` before authz, fixed
+0.63.0 with `skip_udf`). The fix is narrow: at HEAD (`b7a8928`), **two other
+registry RPC handlers still deserialize attacker UDF bytes before authorization**:
+- `ApplyMaterialization` → `FeatureView.from_proto` (no skip_udf) → `resolve_udf`
+  → **`exec(body_text)`** / `dill.loads(body)`. **Core deps only.**
+- `ApplyValidationReference` → `ValidationReference.from_proto` → `GEProfiler`
+  → **`dill.loads`**. Needs the `ge` extra.
+Default `no_auth` config (no interceptor) = unauthenticated RCE on port 6570;
+auth-enabled = any authenticated-but-unauthorized principal. **Verified end-to-end
+with 3 runnable PoCs** (unauth network RCE as uid=0 on the real gRPC server + an
+ordering proof). All in `findings/submissions/feast/` (marked NON-SUBMITTABLE).
+
+**Killed at the duplicate gate.** This is a specific instance of the already-public
+**CVE-2026-18948** — "Unsafe dill deserialization of registry-stored UDFs", CVSS
+**9.9 Critical, published 2026-08-10** (Red Hat Bugzilla 2511167). That CVE names
+the exact sinks (`python_transformation.py:168`, `ge_profiler.py:158`, …) and the
+same "from_proto before assert_permissions_to_update" root cause. Submitting = a
+duplicate of a month-old public Critical CVE → pays nothing, ban risk. Feast also
+discloses via **GHSA only** (credit, likely no cash) and its SECURITY.md rejects
+AI-generated reports. So the recon premise ("Feast = highest-paid huntr target")
+was wrong. Full write-up: `findings/audit-notes-feast.md`.
+
+LESSON (reinforces #1): **do the public-CVE duplicate check FIRST**, before
+building PoCs. A `WebSearch` for "<target> RCE CVE 2026" up front would have shown
+CVE-2026-18948 in 30 seconds and saved the PoC build. The PoCs are still useful as
+evidence that the CVE is unpatched at HEAD — but that is not money.
+
+FINAL STATE: 9 deep audits, all hardened / no-cash / duplicate. The one verified
+paid-track finding remains **StackingDAO** (direct private disclosure; follow up
+2026-09-18). Money path unchanged from #5: (1) StackingDAO follow-up, (2) human
+2-min browse of huntr.com/bounties to pick a *less-hunted, still-funded* program,
+(3) target NEWLY-launched code (days old, fewest eyes, no CVE yet) — freshness is
+the only durable edge. Add a step (0): run the public-CVE/advisory duplicate check
+before investing in any AI/ML target — these repos are now heavily CVE'd.
