@@ -47,16 +47,31 @@ default (`allow_new_registrations=True`).
   an IDOR.
 - **bulk_delete_messages / clean_conversation_history**: correct owner/member filters.
 
-## Leads not yet chased (for a future pass — audit, don't farm)
+## Second sweep (done same session) — rest of the surface is hardened
 
-The `social/dm.py` and other social/resource routers (`friends.py`, `groups.py`,
-`discussion_groups.py`, `notes.py`, `image_studio.py`, `voices_studio.py`,
-`personalities.py`, `skills.py`, `stores.py` [117 KB], `notebooks.py`) are large and
-the maintainer patches IDORs one at a time — a systematic missing-`owner_user_id`-filter
-sweep is likely to yield more. SSRF siblings of CVE-2026-0560 (other URL fetchers:
-`social/__init__.py link-preview`, image/model download paths) also worth a look.
-Report any additional findings as **separate, individually-verified** reports — do not
-bundle or submission-farm.
+Chased the obvious siblings for a second finding; the DM reactions IDOR is the lone gap:
+
+- **Rest of `social/dm.py` is guarded.** `get_conversation_messages` enforces the
+  member check even on the attacker-controlled `is_group=True` path and scopes the 1:1
+  path by sender/receiver; `bulk_delete_messages`, `clean_conversation_history`,
+  `delete_direct_message`, `mark_conversation_as_read`, `get_dm_attachment`,
+  `add_member_to_group` all check membership/ownership. Only `toggle_dm_reaction` was
+  missed — an isolated oversight, which strengthens the finding.
+- **Classic resource routers scoped correctly:** `api_keys.py`, `notes.py`,
+  `prompts.py`, `groups.py`, `discussion_groups.py` all filter get/put/delete-by-id by
+  `owner_user_id == current_user.id` (or group owner/member). No IDOR.
+- **SSRF class centralized + hardened:** `validate_url` + `safe_requests_get` in
+  `backend.security`. `link-preview` (re-validates og:image too), `files.py
+  _download_image_to_temp` (the CVE-2026-0560 fn, now `_validate_url`-gated), and
+  `notebook ingestion pdf_url` all validate. `llm.py` street-view uses a hardcoded
+  Google host (query param only, not SSRF). No SSRF sibling found.
+- **File-read/social-media serving hardened everywhere:** `secure_filename` +
+  `.resolve()`/`is_relative_to` containment; `social /media` adds visibility-based authz.
+
+Not yet audited (lower probability, larger/awkward to PoC): `stores.py` [117 KB, RAG
+datastore sharing], `image_studio.py`/`voices_studio.py` full endpoint set, `scim.py`,
+`sso.py`, admin routers. Report any additional findings as **separate, individually-
+verified** reports — never bundle or submission-farm.
 
 ## Environment
 - `work/lollms-src` — clone (gitignored). `work/venv-lollms` — lean deps (no
