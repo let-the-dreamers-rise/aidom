@@ -25,3 +25,7 @@ mainnet scope (repo head 121dc23, 2026-09-11). No hypothesis cleared Gate 2 of
 the self-refutation gate, so nothing is being drafted. This is an honest
 "nothing found yet", not a finished audit — see `audit-notes-ens.md` for what
 was covered, what was not, and the one lead worth continuing.
+| 2026-09-14 | huntr channel pivot | protectai/ai-exploits calibration | — | — | scoped | broadened beyond Stacks to open-source AI/ML (fee-free, PoC-able in-sandbox) |
+| 2026-09-14 | mlflow (huntr) | mlflow-src HEAD 7c8c3f8 (FastAPI server, jobs/scorers) | artifact traversal; model source LFI; jobs→scorer deserialization RCE | 0 | nothing_found | scorer exec databricks-gated; third-party import closed-set; builtin getattr has no dangerous callable; artifact/source hardened |
+| 2026-09-14 | bentoml (huntr) | bentoml-src HEAD 517b343 | pickle serde RCE (CVE-2024-2912 class) | 0 | nothing_found | main server rejects application/vnd.bentoml+pickle ("DO NOT REMOVE"); exact dict lookup, no bypass; pickle only on internal runner servers |
+| 2026-09-14 | gradio (huntr) | gradio-src HEAD d99a49a v6.27.0 | file-route path traversal (in progress) | — | auditing | GET /file={path} + is_in_or_equal guard |
