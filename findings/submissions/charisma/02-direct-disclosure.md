@@ -6,19 +6,35 @@ read-only and that is all that should ever touch the chain.
 
 ## Channel (pick one; GitHub private report preferred)
 
+charisma.rocks has **no security.txt and no published security contact** (checked
+2026-09-15). Available private channels:
+
 1. **GitHub private vulnerability report (preferred).** Go to
    `github.com/r0zar/charisma` → **Security** tab → **Report a vulnerability**
    (GitHub's private advisory form). If that button isn't present, the repo
    hasn't enabled private reporting — use option 2.
-2. **Direct message to the author.** rozar.btc is active on X/Twitter as
-   `@rozar` / `rozar.btc`. Send a short DM asking for a private channel to share
-   a Low security finding in `blaze-v1`, then send the write-up.
+2. **X/Twitter DM to the author.** rozar.btc is `@lordrozar`. Send the short
+   opener below asking for a private channel; share the write-up once he replies.
+3. **Charisma Discord** (linked from charisma.rocks) — ask a team member/mod for
+   a private way to report a Low security finding; don't post details in a public
+   channel.
+
+Whichever channel: keep the details out of any public view. A first DM should be
+the short opener, not the full write-up dumped cold.
 
 Attach from `~/Downloads/`:
 - `Charisma-blaze-uuid-griefing-report.pdf` (full write-up)
 - `verify_blaze_uuid_griefing.py` (read-only verifier; python3 + curl, no wallet)
 
-## Message body to paste
+## Short DM opener (for a first X message to @lordrozar)
+
+> Hey rozar — I found a **Low** security issue (griefing DoS, no theft) in the
+> deployed `blaze-v1` verifier and want to share it privately, in good faith. No
+> mainnet exploitation, nothing public. What's the best private channel — here,
+> GitHub security advisory, or somewhere else? Happy to send a full write-up +
+> read-only verifier.
+
+## Full message body to paste (GitHub advisory, or after he replies)
 
 > Hi — good-faith private disclosure of a **Low** (griefing DoS, no theft) issue
 > in the deployed `SP2ZNGJ85ENDY6QRHQ5P2D4FXKGZWCKTB2T0Z55KS.blaze-v1`.
