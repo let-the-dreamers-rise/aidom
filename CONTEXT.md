@@ -277,3 +277,46 @@ private disclosure). The honest path to money now:
    huntr.com/bounties (machine can't render the JS/TLS-pinned page).
 3. Or accept that mature targets are dry and pick a NEWLY-launched protocol/
    library (days-old code, fewest eyes) — freshness is the only durable edge left.
+
+## UPDATE 2026-09-29 — channel + infra changes (READ THIS)
+
+Two things changed materially since the 09-14 notes:
+
+1. **Python-ML huntr cash channel is largely dead.** Re-checked SECURITY.md live:
+   - **mlflow**: now *explicitly bans* bounty-platform (huntr) reports — GHSA-only,
+     no cash. (Stale note said "confirmed ~$1.5k".) DROPPED for money.
+   - **llama-index**: still cash on huntr BUT scope is only
+     llama-index-core/-cli/-embeddings-openai/-llms-openai, and the threat model
+     puts input validation on the host app. Core is hardened (no unsafe deser of
+     content, no eval/exec of untrusted input). Low EV.
+   - vLLM (credit-only), HF transformers (email, no cash), gradio (no bounty),
+     haystack (email, scopes out SSRF/deser/path-trav, discourages AI). 
+   - Net: the AI/ML open-source bounty space has locked down against AI reports
+     and cash in 2026. Repo track record confirms it: 0 findings across every
+     Python-ML audit vs. multiple real findings on Clarity.
+
+2. **On-chain read is now BLOCKED in-sandbox.** api.hiro.so AND every other
+   Stacks node (api.mainnet.hiro.so, stacks-node-api.mainnet.stacks.co, ...)
+   return 403 CONNECT at the egress proxy. `curl "$HTTPS_PROXY/__agentproxy/status"`
+   shows the allowlist (github, pypi, npm, crates, go — no Stacks). WebFetch can
+   sometimes reach other hosts but Hiro URLs hit PROVENANCE_REQUIRED (needs the
+   operator to approve/paste the URL). 
+   **Consequence:** Clarity findings that depend on live/mutable on-chain state
+   (fee vars, balances, which contract version is live) CANNOT be verified here.
+   Deployed *source* is still readable via the GitHub mirror
+   `boomcrypto/clarity-deployed-contracts` (raw.githubusercontent.com). Code-level
+   bugs provable in a local clarinet-sdk (WASM, installable via npm) simnet are
+   still fully doable; state-dependent ones need the operator or a node.
+
+3. **Bitflow audited (Stacks AMM).** stableswap + xyk + router. Core logic sound;
+   all exploit hypotheses refuted by a Python math sim. One real-but-low/med,
+   state-dependent observation (stx-ststx admin-fee branch inverted). Not
+   submission-ready. See findings/audit-notes-bitflow.md. DO NOT re-audit Bitflow
+   core blindly; if reviving, first read live `admin-swap-fees` + TVL (needs node).
+
+### Suggested next targets (given the above)
+- Fresh Clarity DeFi with real TVL where a *code-level* bug (not state-dependent)
+  is plausible and clarinet-sdk can PoC it: e.g. ALEX, Bitflow xyk-pool variants,
+  Faktory/bonding-curve launchpads, LISA. Direct disclosure is the fee-free route.
+- If pursuing any Clarity finding to submission, budget for the on-chain-read gap:
+  either get the operator to run the read, or build a clarinet-sdk simnet PoC.
