@@ -38,3 +38,20 @@ SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM.
 Core weighted-AMM math (get-y-given-x-internal etc., pow/exp/ln fixed-point)
 is the long-audited ALEX engine; conservation + bounds hold at the call sites.
 No high-confidence finding. Consistent with a heavily-audited protocol.
+
+## UPDATE — v1 self-listing pool + sponsor wrapper (less-audited surface)
+- `SP3K8BC0…amm-swap-pool-v1-1` (v1 self-listing, 1070 lines): SAME architecture
+  as v2 — `.alex-vault-v1-1` custody + map-tracked per-pool balances +
+  `.token-amm-swap-pool-v1-1` LP token. create-pool is permissionless (self-
+  listing) and seeds via add-to-position with total-supply=0; initial LP =
+  invariant(dx,dy), subsequent = proportional (total-supply*dx/balance-x). No
+  first-deposit inflation attack: balance-x is map-tracked, not the vault's raw
+  balance, so a donation can't inflate share price. Conservation identical to
+  v2. Sound.
+- `sponsored-amm-swap-pool-v1-1`: thin meta-tx wrapper — prepays a sponsor fee
+  (tx-sponsor?) then forwards to the v1 pool; tx-sender preserved, no auth/fund
+  bug.
+- The many per-user `amm-swap-pool-v1-1` copies under other deployers are small
+  owner-gated (`tx-sender == A`) personal scripts, not protocol surface.
+
+## Overall ALEX verdict: sound. No payable finding.
