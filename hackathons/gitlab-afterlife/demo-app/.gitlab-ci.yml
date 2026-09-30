@@ -1,0 +1,54 @@
+# Splitly: the demo "production" app that Afterlife operates.
+# test -> deploy (GitLab Pages) -> verify (smoke test against the live site)
+# Merging an Afterlife "Release vX.Y.Z" MR also tags and publishes the release.
+stages: [test, deploy, verify, release]
+
+default:
+  image: node:22-alpine
+
+test:
+  stage: test
+  script: npm test
+
+pages:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - echo "{\"version\":\"$(cat VERSION)\",\"sha\":\"$CI_COMMIT_SHORT_SHA\"}" > public/health.json
+  artifacts:
+    paths: [public]
+
+smoke:
+  stage: verify
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - node scripts/smoke.mjs "$CI_PAGES_URL/" "$(cat VERSION)"
+
+prepare_release:
+  stage: release
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_MESSAGE =~ /^chore\(release\)/
+  script:
+    - VERSION=$(cat VERSION)
+    - awk "/^## v${VERSION} /{f=1;next} /^## v/{f=0} f" CHANGELOG.md > notes.md
+    - echo "RELEASE_VERSION=$VERSION" > release.env
+  artifacts:
+    paths: [notes.md]
+    reports:
+      dotenv: release.env
+
+publish_release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs: [prepare_release, smoke]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_COMMIT_MESSAGE =~ /^chore\(release\)/
+  script:
+    - echo "Publishing v$RELEASE_VERSION"
+  release:
+    tag_name: v$RELEASE_VERSION
+    name: v$RELEASE_VERSION
+    description: notes.md
+    ref: $CI_COMMIT_SHA

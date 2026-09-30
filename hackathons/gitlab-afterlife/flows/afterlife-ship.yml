@@ -1,0 +1,138 @@
+# Afterlife / ship
+# Trigger: Pipeline events -> Passed (configured in AI > Triggers).
+# Goal: the pipeline webhook payload (JSON).
+#
+# When the default branch goes green after a merge, this flow turns everything
+# merged since the last tag into a versioned release: it picks the semver bump,
+# writes the changelog and release notes, and opens a "Release vX.Y.Z" merge
+# request. Merging that MR is the one human checkpoint; CI then tags, publishes
+# the GitLab Release and deploys (see demo-app/.gitlab-ci.yml).
+version: "v1"
+environment: ambient
+
+components:
+  # Gate: only act on a green pipeline for a normal push to the default branch.
+  # Release commits, tags, MR pipelines and scheduled runs all end here, which
+  # also stops the flow from re-triggering on its own release merge.
+  - name: "gate"
+    type: AgentComponent
+    prompt_id: "afterlife_ship_gate"
+    inputs:
+      - from: "context:goal"
+        as: "pipeline_event"
+    toolset: []
+    max_cycles: 2
+    ui_log_events:
+      - "on_agent_final_answer"
+
+  - name: "release_writer"
+    type: AgentComponent
+    prompt_id: "afterlife_ship_release_writer"
+    inputs:
+      - from: "context:goal"
+        as: "pipeline_event"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset:
+      - "get_project"
+      - "gitlab_api_get"
+      - "list_commits"
+      - "gitlab_merge_request_search"
+      - "get_merge_request"
+      - "get_repository_file"
+      - "create_commit"
+      - "create_merge_request":
+          "remove_source_branch": true
+          "labels": "afterlife::release"
+    max_cycles: 40
+    ui_log_events:
+      - "on_agent_reasoning"
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+      - "on_tool_execution_failed"
+
+routers:
+  - from: "gate"
+    condition:
+      input: "context:gate.final_answer"
+      routes:
+        "release": "release_writer"
+        "default_route": "end"
+  - from: "release_writer"
+    to: "end"
+
+flow:
+  entry_point: "gate"
+
+prompts:
+  - prompt_id: "afterlife_ship_gate"
+    name: "Afterlife ship gate"
+    unit_primitives: []
+    params:
+      timeout: 60
+    prompt_template:
+      system: |
+        You decide whether a finished GitLab pipeline should start a release.
+        You have no tools. Read the pipeline webhook payload and answer with
+        exactly one lowercase word and nothing else:
+
+        release  when ALL of these hold:
+          - object_attributes.status is "success"
+          - object_attributes.ref equals project.default_branch
+          - object_attributes.tag is false
+          - object_attributes.source is "push"
+          - the head commit message (commit.message) does NOT start with
+            "chore(release)"
+        skip     in every other case.
+      user: |
+        Pipeline event:
+        {{pipeline_event}}
+
+  - prompt_id: "afterlife_ship_release_writer"
+    name: "Afterlife release writer"
+    unit_primitives: []
+    params:
+      timeout: 300
+    prompt_template:
+      system: |
+        You are Afterlife's release engineer. The default branch of project
+        {{project_id}} just went green. Turn everything merged since the last
+        release into a release merge request. Work only through your tools and
+        never invent MRs, commits or authors.
+
+        Steps:
+        1. Find the latest release tag: gitlab_api_get endpoint
+           "/projects/{{project_id}}/repository/tags" with params
+           {"order_by": "version", "per_page": 1}. If there is none, treat the
+           previous version as 0.0.0 and include all history.
+        2. List what changed: gitlab_api_get
+           "/projects/{{project_id}}/repository/compare" with params
+           {"from": <last tag>, "to": <pipeline sha>}. Collect the commits.
+           Use gitlab_merge_request_search (state "merged", target the default
+           branch) to map commits to merged MRs, their titles, labels and authors.
+        3. If nothing but release commits changed, stop and answer
+           "nothing to release".
+        4. Pick the bump from Conventional Commits and MR labels:
+           major if any "BREAKING CHANGE", a "!" after the type, or label
+           "breaking"; else minor if any "feat"; else patch.
+        5. Read CHANGELOG.md and VERSION on the default branch with
+           get_repository_file (either may be missing; create it then).
+        6. create_commit on a new branch "afterlife/release-v<X.Y.Z>" with
+           start_branch set to the default branch and commit_message
+           "chore(release): v<X.Y.Z>". Actions: update or create VERSION
+           containing only "<X.Y.Z>\n", and prepend a section to CHANGELOG.md:
+             ## v<X.Y.Z> (<YYYY-MM-DD>)
+             ### Breaking changes / ### Features / ### Fixes / ### Other
+             - <MR title> (!<iid>, @<author>)
+           Omit empty groups. One line per MR; commits without an MR get their
+           short sha instead of !iid.
+        7. create_merge_request from that branch into the default branch, title
+           "Release v<X.Y.Z>". Description: a two-sentence human summary of the
+           release, the changelog section, a "Risk" line naming the riskiest
+           change and why, and the footer
+           "Merging this MR tags v<X.Y.Z>, publishes the release and deploys it."
+
+        Final answer: the MR URL and the version, or why you stopped.
+      user: |
+        Pipeline event:
+        {{pipeline_event}}

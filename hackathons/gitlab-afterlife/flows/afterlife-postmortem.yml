@@ -1,0 +1,124 @@
+# Afterlife / postmortem
+# Trigger: Mention (a human writes "@ai-afterlife-postmortem-<group> write it up"
+# on a closed incident issue) or Work item -> Status changed to closed.
+# Goal: for mentions, "Input: <comment>\nContext: {Issue IID: <iid>}";
+#       for work item events, the work item IID.
+#
+# Writes a blameless postmortem from the incident, its rollback MR and the
+# changes involved, commits it under docs/postmortems/ via a merge request, and
+# files one follow-up issue per action item.
+version: "v1"
+environment: ambient
+
+components:
+  - name: "investigator"
+    type: AgentComponent
+    prompt_id: "afterlife_postmortem_investigator"
+    inputs:
+      - from: "context:goal"
+        as: "trigger"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset:
+      - "get_issue"
+      - "list_issue_notes"
+      - "gitlab_merge_request_search"
+      - "get_merge_request"
+      - "list_merge_request_diffs"
+      - "list_all_merge_request_notes"
+      - "gitlab_api_get"
+      - "get_job_logs"
+    max_cycles: 40
+    ui_log_events:
+      - "on_agent_reasoning"
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+      - "on_tool_execution_failed"
+
+  - name: "writer"
+    type: AgentComponent
+    prompt_id: "afterlife_postmortem_writer"
+    inputs:
+      - from: "context:investigator.final_answer"
+        as: "findings"
+      - from: "context:project_id"
+        as: "project_id"
+    toolset:
+      - "get_project"
+      - "create_commit"
+      - "create_merge_request":
+          "remove_source_branch": true
+          "labels": "afterlife::postmortem"
+      - "create_issue"
+      - "create_issue_note"
+    max_cycles: 30
+    ui_log_events:
+      - "on_agent_final_answer"
+      - "on_tool_execution_success"
+      - "on_tool_execution_failed"
+
+routers:
+  - from: "investigator"
+    to: "writer"
+  - from: "writer"
+    to: "end"
+
+flow:
+  entry_point: "investigator"
+
+prompts:
+  - prompt_id: "afterlife_postmortem_investigator"
+    name: "Afterlife postmortem investigator"
+    unit_primitives: []
+    params:
+      timeout: 300
+    prompt_template:
+      system: |
+        You gather the facts for a blameless postmortem in project
+        {{project_id}}. The trigger names an incident issue by IID. Collect,
+        with tool calls only:
+        - the incident issue and all its notes;
+        - the rollback MR and the suspected MR(s) it links (description, diff,
+          review notes, who approved, when merged);
+        - the failing smoke-test log quoted in the incident;
+        - timestamps: suspected MR merged, release tagged, deploy finished,
+          smoke test failed, incident opened, rollback merged, recovery pipeline
+          green (gitlab_api_get on "/projects/{{project_id}}/pipelines" and
+          "/projects/{{project_id}}/repository/tags" as needed).
+        Final answer: a factual brief with sections Incident, Timeline (UTC),
+        Trigger, Root cause (what the code did, not who), Detection, Recovery,
+        What went well, Where we got lucky, and Links. Mark anything you could
+        not confirm as "unconfirmed". Write no conclusions without a source.
+      user: |
+        Trigger:
+        {{trigger}}
+
+  - prompt_id: "afterlife_postmortem_writer"
+    name: "Afterlife postmortem writer"
+    unit_primitives: []
+    params:
+      timeout: 300
+    prompt_template:
+      system: |
+        You publish a blameless postmortem for project {{project_id}} from the
+        investigator's brief. Never name a person as a cause; name systems,
+        checks and decisions.
+
+        1. Decide 1 to 4 action items that would have prevented or shortened
+           the incident (a missing test, a smoke-test gap, a review rule). Each
+           must be concrete and checkable.
+        2. create_issue for each action item, label "afterlife::follow-up",
+           description linking the incident.
+        3. Write docs/postmortems/<YYYY-MM-DD>-<slug>.md containing the brief's
+           sections plus "Action items" (linking the new issues). Add a
+           one-paragraph TL;DR at the top.
+        4. create_commit on branch "afterlife/postmortem-<incident iid>" from the
+           default branch (get_project gives it), message
+           "docs(postmortem): <incident title>".
+        5. create_merge_request titled "Postmortem: <incident title>".
+        6. create_issue_note on the incident linking the postmortem MR and the
+           follow-up issues.
+        Final answer: postmortem MR URL and follow-up issue URLs.
+      user: |
+        Investigator brief:
+        {{findings}}

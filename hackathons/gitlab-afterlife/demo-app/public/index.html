@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Splitly</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 28rem; margin: 3rem auto; padding: 0 1rem; }
+    label { display: block; margin-top: .75rem; }
+    input { width: 100%; padding: .4rem; font-size: 1rem; }
+    #result { margin-top: 1rem; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Splitly</h1>
+  <label>Bill <input id="total" type="number" min="0" step="0.01" value="100"></label>
+  <label>People <input id="people" type="number" min="1" value="3"></label>
+  <label>Tip % <input id="tip" type="number" min="0" value="15"></label>
+  <p id="result" data-testid="result"></p>
+  <script type="module">
+    import { split, formatCents } from "./split.js";
+    const config = await (await fetch("./config.json")).json();
+    const render = () => {
+      const shares = split(Math.round(+total.value * 100), +people.value, +tip.value);
+      result.textContent = shares.map((s) => formatCents(s, config.currency)).join(" · ");
+    };
+    for (const el of [total, people, tip]) el.addEventListener("input", render);
+    render();
+  </script>
+</body>
+</html>
