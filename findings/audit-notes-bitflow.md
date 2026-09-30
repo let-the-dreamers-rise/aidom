@@ -81,3 +81,34 @@ with the broken branch having been removed in the redesign.
 
 Conclusion: no high-confidence, submission-ready finding on Bitflow from an
 in-sandbox source audit. Core swap/liquidity/router logic is sound.
+
+## UPDATE 2026-09-29 #2 — expanded scope (Bitflow runs a LIVE $100k Immunefi program)
+Immunefi re-launched a Bitflow bug bounty at $100k (Immunefi announcement
+2026). So a real fund-loss bug pays big — audited the authorization + reward
+layer that a critical would live in. All sound:
+- **stx-ststx-lp-token-v-1-2**: `mint` gated to `approved-supply-controller`
+  (the core, set by CONTRACT-OWNER; core calls via `as-contract` so tx-sender
+  = core). `burn` requires tx-sender==burner (self-only). No unauthorized mint.
+- **xyk-pool-stx-aeusdc-v-1-1**: every mutator (`pool-mint`, `pool-burn`,
+  `pool-transfer`, `update-pool-balances`, `create-pool`, `set-*`) asserts
+  `caller == CORE_ADDRESS` (a compile-time constant = .xyk-core-v-1-1). Core
+  calls via `as-contract`. No direct drain/mint path.
+- **earn-stx-ststx-v-1-2 (staking & rewards, where LP fees pool)**: sound.
+  - Staking credits only FUTURE cycles (current-cycle+1 .. +cycles), never the
+    current or a past cycle → cannot flash-stake to grab already-accrued fees.
+  - Reward = fee_K * user_staked_K / total_staked_K for a PAST cycle only
+    (`cycle < current-cycle`), `reward-claimed` flag per (user,cycle) blocks
+    double-claim in both claim-cycle and claim-all paths.
+  - Conservation: each stake adds `amount` to BOTH the user's per-cycle stake
+    and DataPerCycleMap[cycle] (denominator), so per-cycle user shares sum to
+    the tracked total; the STX to pay them is physically forwarded by the pool
+    (`x-amount-fee-lps` → staking contract) and matches CycleDataMap. No
+    over-claim beyond fees received (rounding only ever under-pays).
+  - Unstake is locked until `current-cycle+cycles+1`; accounting matches stake.
+
+Net: Bitflow's swap / liquidity / LP-token / pool / router / staking layers are
+all well-built. No Critical/High found. The only deviation is the stx-ststx
+admin-fee inversion (Low/Med, loss of protocol fee revenue, state-dependent,
+evidently removed in the newer pool redesign) — not a $100k-tier bug and not
+verifiable on live state from this sandbox. Honest result: this protocol is
+solid, which is consistent with it carrying a $100k program + prior audits.
