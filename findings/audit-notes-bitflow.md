@@ -112,3 +112,13 @@ admin-fee inversion (Low/Med, loss of protocol fee revenue, state-dependent,
 evidently removed in the newer pool redesign) — not a $100k-tier bug and not
 verifiable on live state from this sandbox. Honest result: this protocol is
 solid, which is consistent with it carrying a $100k program + prior audits.
+
+## UPDATE 2026-09-29 #3 — newer redesigned pools verified (in $100k scope)
+Read the full swap-x-for-y / swap-y-for-x / add-liquidity / withdraw-liquidity
+of `stableswap-abtc-xbtc-v-1-2` (the redesigned generation: generalized
+x-token trait, flat `swap-fees {lps, protocol}`, no admin-fee branch). The
+AMM math (get-D, get-y/get-x convention, imbalance-fee add-liquidity with
+mint = shares*(d2-d0)/d0, proportional withdraw) is LOGIC-IDENTICAL to the
+stx-ststx pool already proven conservative by the Python sim. Fees are pulled
+from the swapper and routed to staking/protocol (not left in-pool, no
+double-count). No new bug in the rewrite. Whole Bitflow $100k scope is sound.
