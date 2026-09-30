@@ -1,0 +1,11 @@
+interface:
+  display_name: "Mermail Thread Reconstructor"
+  short_description: "Read-only: rebuild one email conversation into a sourced, quote-attributed timeline with decisions, open questions, and action items."
+  default_prompt: "Use $mermail-thread-reconstructor to reconstruct this Mermail conversation into a sourced timeline with decisions, open questions, and action items. Do not draft, send, move, or delete anything."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "mermail"
+      description: "Mermail workspace and mailbox MCP server (read tools only for this skill)"
+      transport: "streamable_http"
+      url: "https://console.mermail.app/mcp"
