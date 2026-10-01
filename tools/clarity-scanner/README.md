@@ -63,3 +63,35 @@ Class weights: `OWNER` ≫ `MINT` ≫ `CUSTODY`.
 Then a human reads the top of `ranked.json`, confirms the bug against the
 deployed source, and only a *confirmed, value-bearing* finding goes through the
 self-refutation gate (`../../playbook/self-refutation.md`) before any report.
+
+## Known blind spots (why the top hits are mostly false positives)
+
+A triage run on 2026-10-01 over the full mainnet corpus flagged ~18k contracts
+after filtering; the highest-value hits were all explainable non-bugs. The two
+systematic causes — fix these before trusting the list:
+
+1. **External controller/DAO guards are invisible.** The common Clarity pattern
+   gates a privileged function with `(try! (contract-call? .x-controller
+   authorize-...))` or `is-dao-or-extension` on *another* contract. `GUARD_RE`
+   only sees local helpers and a fixed token list, so e.g.
+   `pontis-bridge-pBTC.mint` (gated by `.pontis-bridge-controller
+   authorize-bridge-instance`) is flagged MINT though it is sound. Most
+   MINT/CUSTODY false positives are this. Fix: treat any `contract-call?` to a
+   function whose name matches `authoriz|assert|is-(owner|admin|dao|approved)|
+   check-|only-|restrict|can-` as a guard.
+
+2. **`strict` is unreliable** — the `\basserts!\b` / `\btry!\b` test never
+   matches (trailing `\b` after `!` fails, same class of bug as the original
+   MINT regex), so a function guarded only by `asserts!`/`try!` (no `is-eq`) is
+   wrongly marked strict. Fix: drop the trailing `\b` from those tokens.
+
+3. **`inbound` collides on short name.** References are counted by contract
+   short-name, not full `principal.name`, so a worthless test contract named
+   `arkadiko-swap-v2-1` inherits the real Arkadiko's 2.5k inbound refs. Fix:
+   match the full `deployer.name` principal.
+
+Net: permissionless-by-design AMMs (Dexterity/Faktory pool templates), SIP-010
+`transfer` (guarded by `is-eq tx-sender sender`), externally-gated bridge/token
+mints, and deployed test contracts dominate the list. The genuinely
+interesting residue is a public fund-sink with NO local guard AND NO
+`contract-call?` to any controller/dao — that subset is what to rank next.

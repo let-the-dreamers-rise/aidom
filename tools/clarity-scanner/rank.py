@@ -24,6 +24,23 @@ SCAN = sys.argv[1] if len(sys.argv) > 1 else "scan_all.json"
 
 findings = json.load(open(SCAN))
 
+# Keep only high-signal findings: MINT or OWNER (any), or CUSTODY only when the
+# reachable code has NO access-control primitive at all (strict=truly ungated).
+def keep(f):
+    cls = set(f['classes'])
+    if cls & {'MINT', 'OWNER'}:
+        return True
+    if 'CUSTODY' in cls and f.get('strict'):
+        return True
+    return False
+
+_filtered = []
+for x in findings:
+    fs = [f for f in x['findings'] if keep(f)]
+    if fs:
+        _filtered.append({'file': x['file'], 'findings': fs})
+findings = _filtered
+
 # ---- load corpus signals ----
 named_deployers = set()
 try:
@@ -94,12 +111,18 @@ for cid, x in flagged_ids.items():
     short = cid.split('.', 1)[1]
     classes = set()
     fns = []
+    strict = False
     for f in x['findings']:
         classes.update(f['classes'])
-        fns.append(f['fn'] + '/' + ','.join(f['classes']))
+        tag = f['fn'] + '/' + ','.join(f['classes'])
+        if f.get('strict'):
+            tag += '*'; strict = True
+        fns.append(tag)
     score = 0
     for c in classes:
         score += CLASS_W.get(c, 0)
+    if strict:
+        score += 60
     inb = inbound.get(short, 0) - 1  # subtract self-reference
     inb = max(inb, 0)
     score += min(inb, 50) * 3
@@ -113,7 +136,7 @@ for cid, x in flagged_ids.items():
         score += 10
     rows.append({
         'cid': cid, 'score': score, 'classes': sorted(classes),
-        'inbound': inb, 'named': named, 'sip': sip,
+        'inbound': inb, 'named': named, 'sip': sip, 'strict': strict,
         'kw': bool(KW.search(short)), 'fns': fns,
     })
 
@@ -122,4 +145,5 @@ json.dump(rows, open('ranked.json', 'w'), indent=0)
 print(f"ranked {len(rows)} flagged contracts")
 print("\nTop 40 by score:")
 for r in rows[:40]:
-    print(f"{r['score']:5d} inb={r['inbound']:3d} {'N' if r['named'] else '.'}{'S' if r['sip'] else '.'}{'K' if r['kw'] else '.'} {r['cid']}  {r['fns'][:3]}")
+    flags = ('N' if r['named'] else '.') + ('S' if r['sip'] else '.') + ('K' if r['kw'] else '.') + ('*' if r['strict'] else '.')
+    print(f"{r['score']:5d} inb={r['inbound']:3d} {flags} {r['cid']}  {r['fns'][:3]}")

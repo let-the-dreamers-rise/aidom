@@ -79,7 +79,7 @@ def parse_functions(src):
 
 # ---- sinks and guards -------------------------------------------------------
 
-MINT_RE    = re.compile(r'\b(ft-mint\?|nft-mint\?)\b')
+MINT_RE    = re.compile(r'(ft-mint\?|nft-mint\?|ft-mint-many)')
 TRANSFER_RE= re.compile(r'\b(ft-transfer\?|nft-transfer\?|stx-transfer\?|stx-transfer-memo\?|transfer-fixed|transfer\b)')
 ASCONTRACT_RE = re.compile(r'\bas-contract\b')
 VARSET_RE  = re.compile(r'\(\s*var-set\s+([a-zA-Z0-9\-\_\?\!]+)')
@@ -149,7 +149,10 @@ def analyze_file(path):
                 classes.append('OWNER')
                 break
         if classes and not guarded:
-            findings.append({'fn': name, 'classes': classes})
+            # strict signal: the reachable code has NO access-control primitive
+            # at all (no asserts!, try!, unwrap!, is-eq) -> very likely truly ungated
+            no_ac = not re.search(r'\b(asserts!|try!|unwrap!|is-eq|is-some|is-none)\b', rtext)
+            findings.append({'fn': name, 'classes': classes, 'strict': no_ac})
     return findings
 
 def main():
