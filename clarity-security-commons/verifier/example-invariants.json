@@ -1,0 +1,17 @@
+{
+  "_comment": "Template. Replace the contract IDs, functions and paths with the protocol you are checking. Each side is a number or a read-only call; 'path' digs into a tuple or list result.",
+  "invariants": [
+    {
+      "name": "vault backing covers share supply",
+      "lhs": {"call": "SP000000000000000000002Q6VF78.share-token::get-total-supply"},
+      "op": "<=",
+      "rhs": {"call": "SP000000000000000000002Q6VF78.vault::get-total-assets"}
+    },
+    {
+      "name": "pool reserve matches vault balance for token x",
+      "lhs": {"call": "SP000000000000000000002Q6VF78.registry::get-pool", "args": ["u1"], "path": "balance-x"},
+      "op": "<=",
+      "rhs": {"call": "SP000000000000000000002Q6VF78.token-x::get-balance", "args": ["'SP000000000000000000002Q6VF78.vault"]}
+    }
+  ]
+}
