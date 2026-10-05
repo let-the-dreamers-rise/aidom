@@ -3,6 +3,11 @@
 # Merging an Afterlife "Release vX.Y.Z" MR also tags and publishes the release.
 stages: [test, deploy, verify, release]
 
+# Security stage: GitLab's own SAST and secret detection (available on Free).
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
 default:
   image: node:22-alpine
 

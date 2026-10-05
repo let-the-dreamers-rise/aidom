@@ -11,6 +11,8 @@ Three custom flows on the GitLab Duo Agent Platform, wired to GitLab's own
 pipeline, merge-request and work-item triggers. One human click (merging the
 release MR) is the only required step; everything else is hands-off.
 
+**Path:** A (start fresh). Inferred from public Path A entries; confirm when the official rules post.
+
 ## Stages covered
 
 | Stage | Who does it | How |
@@ -18,6 +20,7 @@ release MR) is the only required step; everything else is hands-off.
 | Decide if main is releasable | `afterlife-ship` gate agent | Pipeline **Passed** trigger |
 | Semver bump from Conventional Commits + MR labels | `afterlife-ship` release writer | tags + compare API |
 | Changelog + release notes + risk call-out | release writer | commits `CHANGELOG.md`, `VERSION`, opens "Release vX.Y.Z" MR |
+| Security scan gate | CI (GitLab SAST + secret detection) + release writer | scan results go in the release MR |
 | Tag + GitLab Release | CI (`prepare_release`, `publish_release`) | on merge of the release MR |
 | Deploy | CI (`pages`) | GitLab Pages = production |
 | Verify production | CI (`smoke`) | checks the *live* site: version, config, core logic |

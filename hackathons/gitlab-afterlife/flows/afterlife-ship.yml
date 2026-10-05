@@ -126,10 +126,14 @@ prompts:
              - <MR title> (!<iid>, @<author>)
            Omit empty groups. One line per MR; commits without an MR get their
            short sha instead of !iid.
-        7. create_merge_request from that branch into the default branch, title
+        7. Security check: gitlab_api_get
+           "/projects/{{project_id}}/pipelines/<pipeline id>/jobs" and confirm the
+           SAST and secret-detection jobs succeeded. Note the result for the MR.
+        8. create_merge_request from that branch into the default branch, title
            "Release v<X.Y.Z>". Description: a two-sentence human summary of the
            release, the changelog section, a "Risk" line naming the riskiest
-           change and why, and the footer
+           change and why, a "Security" line with the scan job results, and the
+           footer
            "Merging this MR tags v<X.Y.Z>, publishes the release and deploys it."
 
         Final answer: the MR URL and the version, or why you stopped.
