@@ -1,30 +1,42 @@
-# Setting Afterlife up on gitlab.com
+# Setting Afterlife up for the hackathon (official rules, 7 Oct 2026)
 
-Check the official rules first when they publish on 5 Oct. The last GitLab
-hackathon required projects to live in a hackathon group
-(`gitlab.com/gitlab-ai-hackathon`), an MIT license, and a video under 3 minutes.
-Adjust steps 1 and 6 to whatever this one says.
+Deadline: **27 Oct 2026, 13:00 UTC**. Path A projects must be **created on or
+after 5 Oct 2026**, be public, MIT-licensed, and use the GitLab Duo Agent Platform.
 
-1. **Project.** Create a public project (in the hackathon group if required),
-   named `afterlife`. Push the contents of `demo-app/` to its root, plus
-   `flows/`, `README.md` and a `LICENSE` (MIT).
-2. **Pages.** Settings → Pages: make sure Pages is enabled and note the URL.
-   The first push to `main` runs `test → pages → smoke`.
-3. **Duo.** Settings → GitLab Duo: turn on the Agent Platform and custom flows
-   for the project/group (hackathon access or trial if the tier needs it).
-4. **Flows.** AI → Flows → New flow, three times. Paste each YAML from
-   `flows/`, name them `afterlife-ship`, `afterlife-guard`,
-   `afterlife-postmortem`, visibility Public. Then Managed → Enable each one in
-   the project. This creates service accounts like `ai-afterlife-ship-<group>`.
-5. **Triggers.** AI → Triggers → New flow trigger:
+## Ash: do these first (they gate everything else)
+
+1. **Register on Devpost** (if not done):
+   https://gitlab-transcend.devpost.com/
+2. **Contributor onboarding** (about 5 minutes, then ~24 h for GitLab to
+   approve). Approval provisions your hackathon group, subgroup and project:
+   https://contributors.gitlab.com/transcend-hackathon
+3. Tell Claude in the thread once you're approved, and paste the project URL.
+
+## After approval (Claude can walk you through each click)
+
+4. **Code.** Push `demo-app/` (as the repo root), `flows/`, `README.md` and
+   `LICENSE` into the provisioned project as a fresh repository.
+5. **Pages.** Settings → Pages: enabled. First push to `main` runs
+   test → SAST/secret detection → pages → smoke.
+6. **Flows.** AI → Flows → New flow, three times, pasting each YAML from
+   `flows/` (`afterlife-ship`, `afterlife-guard`, `afterlife-postmortem`). Then
+   Managed → Enable each in the project.
+7. **Triggers.** AI → Triggers → New flow trigger:
    - `afterlife-ship`: Pipeline events → Passed
    - `afterlife-guard`: Pipeline events → Failed
    - `afterlife-postmortem`: Mention, and Work item → Status changed → Closed
-6. **Labels.** Create `afterlife::release`, `afterlife::rollback`,
-   `afterlife::revert`, `afterlife::incident`, `afterlife::postmortem`,
-   `afterlife::follow-up`, `severity::2`, `breaking`.
-7. **Dry run.** Follow `DEMO.md` once before recording.
+8. **Labels.** `afterlife::release`, `afterlife::rollback`, `afterlife::revert`,
+   `afterlife::incident`, `afterlife::postmortem`, `afterlife::follow-up`,
+   `severity::2`, `breaking`.
+9. **Optional Google Cloud bonus.** Create a public website bucket and a
+   service account with Storage Admin; add CI/CD variables `GCS_BUCKET` and
+   `GCP_SA_KEY` (type File).
+10. **Run the demo** in `DEMO.md`, record it (max 3 min), upload to YouTube as
+    public.
+11. **Submit on Devpost:** description (from `README.md`), public GitLab repo
+    URL, YouTube link, and the Google Cloud URL if you did step 9.
 
-Note from GitLab's docs: triggers only fire on actions by a human, not by bots
-or other flows. That is why merging the release/rollback MRs is done by you,
-and it is the human checkpoint in the story.
+Note from GitLab's docs: triggers only fire on actions by a human, not bots or
+other flows. That's why you merge the release, rollback and revert MRs
+yourself. That's the "review final outcomes" step that makes this a
+Supervised entry.

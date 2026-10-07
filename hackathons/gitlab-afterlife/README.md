@@ -1,8 +1,7 @@
 # Afterlife: your code's life after merge, run by agents
 
-Entry prep for GitLab's **Life After Code** hackathon (Devpost, 5–27 Oct 2026,
-$45k). Official rules and challenge paths publish on 5 Oct; this is built so it
-can be adapted to them in a day.
+Entry for GitLab's **Life After Code** hackathon (Devpost, 5–27 Oct 2026, $45k;
+submissions close 27 Oct 13:00 UTC).
 
 **Pitch:** A developer's job ends at "merge". Afterlife takes it from there:
 versioning, changelog, release, deploy verification, incident response,
@@ -11,7 +10,18 @@ Three custom flows on the GitLab Duo Agent Platform, wired to GitLab's own
 pipeline, merge-request and work-item triggers. One human click (merging the
 release MR) is the only required step; everything else is hands-off.
 
-**Path:** A (start fresh). Inferred from public Path A entries; confirm when the official rules post.
+**Entering:** Path A (Start Fresh) → **Best Supervised Agent** ($4,000), and
+**Most Stages Covered** ($5,000, one winner per path).
+
+Why Supervised: the rules define it as "agents execute multi-step workflows
+independently; humans review final outcomes only". Afterlife's agents do every
+step on their own; the only human actions are reviewing and merging the
+finished release, rollback or revert MR. (GitLab triggers also only fire on
+human actions, which rules out a credible Hands-off loop with flows alone.)
+
+**Google Cloud bonus (up to +0.2):** set `GCP_SA_KEY` and `GCS_BUCKET` and
+production moves from GitLab Pages to a Google Cloud Storage website; the smoke
+test follows it automatically.
 
 ## Stages covered
 

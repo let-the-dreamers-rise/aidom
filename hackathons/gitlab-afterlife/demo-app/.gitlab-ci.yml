@@ -24,12 +24,28 @@ pages:
   artifacts:
     paths: [public]
 
+# Optional Google Cloud production (hackathon bonus): set GCP_SA_KEY (file
+# variable, service-account JSON with Storage Admin) and GCS_BUCKET (a public
+# website bucket). Without them, GitLab Pages is production.
+deploy_gcp:
+  stage: deploy
+  image: google/cloud-sdk:slim
+  needs: [pages]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $GCP_SA_KEY && $GCS_BUCKET
+  script:
+    - gcloud auth activate-service-account --key-file "$GCP_SA_KEY"
+    - gcloud storage rsync --recursive --delete-unmatched-destination-objects public "gs://$GCS_BUCKET"
+    - gcloud storage objects update "gs://$GCS_BUCKET/**" --cache-control="no-store"
+
 smoke:
   stage: verify
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
-    - node scripts/smoke.mjs "$CI_PAGES_URL/" "$(cat VERSION)"
+    - |
+      if [ -n "$GCS_BUCKET" ]; then PROD_URL="https://storage.googleapis.com/$GCS_BUCKET/"; else PROD_URL="$CI_PAGES_URL/"; fi
+    - node scripts/smoke.mjs "$PROD_URL" "$(cat VERSION)"
 
 prepare_release:
   stage: release
